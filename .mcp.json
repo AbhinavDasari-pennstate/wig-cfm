@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "sap-crm": {
+      "command": "python",
+      "args": ["-m", "mcp_servers.sap_crm_server"],
+      "env": {
+        "SAP_API_URL": "${SAP_API_URL}",
+        "SAP_API_KEY": "${SAP_API_KEY}"
+      }
+    },
+    "warranty": {
+      "command": "python",
+      "args": ["-m", "mcp_servers.warranty_server"],
+      "env": {
+        "SAP_API_URL": "${SAP_API_URL}",
+        "SAP_API_KEY": "${SAP_API_KEY}",
+        "COURIER_API_URL": "${COURIER_API_URL}",
+        "COURIER_API_KEY": "${COURIER_API_KEY}"
+      }
+    },
+    "procurement": {
+      "command": "python",
+      "args": ["-m", "mcp_servers.procurement_server"],
+      "env": {
+        "SAP_MM_ODATA_URL": "${SAP_MM_ODATA_URL}",
+        "SAP_API_KEY": "${SAP_API_KEY}",
+        "SAP_WORKFLOW_URL": "${SAP_WORKFLOW_URL}"
+      }
+    }
+  }
+}

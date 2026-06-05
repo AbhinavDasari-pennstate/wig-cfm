@@ -1,0 +1,121 @@
+"""FastAPI app: serves the client demo dashboard, the live demo JSON, and the
+real channel ingestion endpoints from the implementation guide.
+
+Run:  uvicorn orchestrator.main:app --port 8000   (or `make run`)
+
+Two surfaces:
+  • GET /api/demo        — runs all scenarios on a fresh backend (powers the dashboard)
+  • POST /feedback/*      — live ingestion against an app-level backend (accumulates state)
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
+
+from agents import agent1_intake, agent5_procurement, agent2_warranty
+from channels import (ecomm_listener, email_listener, qr_listener, whatsapp_listener)
+from core.backend import DemoBackend
+from core.llm import ScriptedLLMRunner
+from demo.runner import build_report
+from models.feedback_ticket import Brand, FeedbackChannel, FeedbackTicket, Language
+
+app = FastAPI(title="WIG Customer Feedback Intelligence — Demo")
+WEB = Path(__file__).resolve().parent.parent / "web"
+
+# App-level backend for live ingestion (the dashboard uses a fresh one per call).
+_BACKEND = DemoBackend()
+_RUNNER = ScriptedLLMRunner()
+
+
+async def _intake_and_route(ticket: FeedbackTicket) -> dict:
+    a1 = await agent1_intake.process_intake(ticket, _BACKEND, _RUNNER)
+    routing = a1["routing"]
+    out = {"routing": routing, "acknowledgment": a1["acknowledgment"],
+           "sap_ticket_id": ticket.sap_ticket_id, "brand": ticket.brand.value,
+           "category": ticket.category.value, "urgency": ticket.urgency_score}
+    if routing == "HITL":
+        _BACKEND._log("hitl_escalation", sap_ticket_id=ticket.sap_ticket_id)
+    elif routing == "AGENT5":
+        out["diagnosis"] = await agent5_procurement.process_out_of_stock(ticket, _BACKEND, _RUNNER)
+    return out
+
+
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
+
+
+@app.get("/api/demo")
+async def api_demo() -> JSONResponse:
+    return JSONResponse(await build_report())
+
+
+@app.post("/feedback/email")
+async def feedback_email(raw_email: dict) -> dict:
+    return await _intake_and_route(await email_listener.parse_email(raw_email))
+
+
+@app.post("/feedback/whatsapp")
+async def feedback_whatsapp(payload: dict) -> dict:
+    return await _intake_and_route(await whatsapp_listener.parse_whatsapp(payload))
+
+
+@app.post("/feedback/ecomm")
+async def feedback_ecomm(payload: dict) -> dict:
+    return await _intake_and_route(await ecomm_listener.parse_ecomm_webhook(payload))
+
+
+@app.post("/feedback/qr")
+async def feedback_qr(payload: dict) -> dict:
+    """QR scans bypass Agent 1 and route straight to the procurement agent."""
+    ticket = await qr_listener.parse_qr_scan(payload)
+    created = _BACKEND.create_ticket({
+        "customer_id": ticket.customer_id, "brand": ticket.brand.value,
+        "category": ticket.category.value, "urgency_score": ticket.urgency_score,
+        "language": ticket.customer_language.value, "raw_text": ticket.raw_text,
+        "channel": ticket.channel.value, "store_name": ticket.store_name,
+        "product_sku": ticket.product_sku})
+    ticket.sap_ticket_id = created["sap_ticket_id"]
+    diag = await agent5_procurement.process_out_of_stock(ticket, _BACKEND, _RUNNER)
+    return {"sap_ticket_id": ticket.sap_ticket_id, "diagnosis": diag}
+
+
+def _reconstruct(sap_ticket_id: str) -> FeedbackTicket:
+    rec = _BACKEND.tickets.get(sap_ticket_id)
+    if not rec:
+        raise HTTPException(404, f"unknown ticket {sap_ticket_id}")
+    t = FeedbackTicket(raw_text=rec.get("raw_text", ""),
+                       channel=FeedbackChannel(rec.get("channel", "EMAIL")),
+                       customer_id=rec.get("customer_id"),
+                       product_sku=rec.get("product_sku"),
+                       store_name=rec.get("store_name"))
+    t.sap_ticket_id = sap_ticket_id
+    t.customer_language = Language(rec.get("language", "ENGLISH"))
+    t.brand = Brand(rec.get("brand", "OTHER"))
+    return t
+
+
+@app.post("/restock-confirmed")
+async def restock_confirmed(payload: dict) -> dict:
+    """SAP inventory webhook → proactively notify the original customer (Agent 5 / Gap A)."""
+    t = _reconstruct(payload["sap_ticket_id"])
+    res = await agent5_procurement.notify_customer_on_restock(
+        t, _BACKEND, _RUNNER, aisle=payload.get("aisle", "—"))
+    return {"status": "customer_notified", "scores": res["scores"]}
+
+
+@app.post("/fulfillment-confirmed")
+async def fulfillment_confirmed(payload: dict) -> dict:
+    """Warranty desk confirms dispatch → send the loop-close + survey (Agent 2 / Gaps A & C)."""
+    t = _reconstruct(payload["sap_ticket_id"])
+    res = await agent2_warranty.complete_fulfillment(
+        t, _BACKEND, _RUNNER, tracking=payload.get("tracking", "—"))
+    return {"status": "loop_closed", "scores": res["scores"]}
+
+
+@app.get("/")
+async def index() -> FileResponse:
+    return FileResponse(WEB / "index.html")
