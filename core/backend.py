@@ -287,3 +287,135 @@ class DemoBackend:
                 "csat_score": 2, "nps_score": 2, "ces_score": 2,
                 "store_name": "GEEPAS Store",
             })
+
+        # Additional brands: PARAJOHN, KRYPTON, OLSENMARK, DELCASA.
+        # Score profiles are tuned to tell a clear story: KRYPTON declining
+        # (velocity spike explains it), OLSENMARK/DELCASA improving.
+        more_profiles = {
+            "PARAJOHN":  {"region": "Dubai Marina",  "n": 14,
+                          "csat": [4, 5, 4, 4, 5, 4, 4], "nps": [9, 8, 9, 8, 9, 8, 9],
+                          "ces": [4, 4, 3, 4, 4, 3, 4]},
+            "KRYPTON":   {"region": "Abu Dhabi",     "n": 14,
+                          "csat": [4, 3, 4, 4, 3, 4, 4], "nps": [8, 7, 8, 7, 8, 7, 8],
+                          "ces": [3, 4, 3, 4, 3, 3, 4]},
+            "OLSENMARK": {"region": "Sharjah",       "n": 12,
+                          "csat": [4, 4, 4, 3, 4, 4, 5], "nps": [8, 8, 7, 8, 9, 8, 8],
+                          "ces": [3, 4, 3, 3, 4, 3, 4]},
+            "DELCASA":   {"region": "Dubai",         "n": 8,
+                          "csat": [4, 3, 4, 4, 3, 4, 4], "nps": [7, 6, 8, 7, 6, 7, 8],
+                          "ces": [3, 3, 4, 3, 3, 4, 3]},
+        }
+        for brand, p in more_profiles.items():
+            for i in range(p["n"]):
+                self.corpus.append({
+                    "brand": brand, "product_sku": f"{brand[:2]}-{1000 + (i % 4)}",
+                    "category": cats[i % len(cats)], "region": p["region"],
+                    "created_at": _days_ago(4 + (i % 3)), "resolved": True,
+                    "csat_score": p["csat"][i % 7], "nps_score": p["nps"][i % 7],
+                    "ces_score": p["ces"][i % 7], "store_name": f"{brand} Store",
+                })
+
+        # KRYPTON KT-IRON21 velocity cluster — new SKU, 0 prior → 4 recent.
+        # Drags KRYPTON brand NPS into negative territory, making the dashboard
+        # story clear: the velocity spike is reflected in brand metrics.
+        for d in (0.5, 1.0, 1.5, 2.0):
+            self.corpus.append({
+                "brand": "KRYPTON", "product_sku": "KT-IRON21", "category": "PRODUCT_QUALITY",
+                "region": "Abu Dhabi", "created_at": _days_ago(d), "resolved": True,
+                "csat_score": 2, "nps_score": 2, "ces_score": 2,
+                "store_name": "KRYPTON Store",
+            })
+
+        # Prior-week corpus (days 8–14) for trend-arrow computation.
+        # ROYALFORD prior NPS is high (+60) vs current (+14) — dramatic decline,
+        # explains why it is the coaching target. KRYPTON prior is solid; the
+        # new-SKU spike is the sole cause of this week's drop.
+        prior_profiles = {
+            "GEEPAS":    {"region": "Dubai",        "n": 16,
+                          "csat": [4, 4, 4, 5, 4, 4, 4], "nps": [9, 8, 8, 9, 8, 8, 9],
+                          "ces": [4, 4, 3, 4, 4, 3, 4]},
+            "NESTO":     {"region": "Sharjah",      "n": 14,
+                          "csat": [3, 4, 3, 4, 3, 4, 4], "nps": [7, 7, 8, 7, 7, 8, 7],
+                          "ces": [3, 3, 3, 4, 3, 3, 4]},
+            "ROYALFORD": {"region": "Abu Dhabi",    "n": 18,
+                          "csat": [4, 3, 4, 4, 3, 4, 4], "nps": [9, 8, 9, 9, 8, 8, 9],
+                          "ces": [3, 3, 3, 3, 2, 3, 3]},
+            "PARAJOHN":  {"region": "Dubai Marina", "n": 11,
+                          "csat": [4, 4, 5, 4, 4, 5, 4], "nps": [8, 9, 8, 9, 8, 9, 8],
+                          "ces": [3, 4, 4, 3, 4, 3, 4]},
+            "KRYPTON":   {"region": "Abu Dhabi",    "n": 13,
+                          "csat": [4, 4, 4, 3, 4, 4, 4], "nps": [8, 8, 7, 8, 8, 7, 8],
+                          "ces": [3, 3, 4, 3, 3, 4, 3]},
+            "OLSENMARK": {"region": "Sharjah",      "n": 9,
+                          "csat": [3, 4, 4, 3, 4, 3, 4], "nps": [7, 8, 7, 7, 8, 7, 7],
+                          "ces": [3, 3, 3, 2, 3, 3, 3]},
+            "DELCASA":   {"region": "Dubai",        "n": 6,
+                          "csat": [3, 4, 3, 4, 3, 4, 3], "nps": [6, 7, 6, 7, 6, 7, 6],
+                          "ces": [3, 2, 3, 3, 2, 3, 3]},
+        }
+        for brand, p in prior_profiles.items():
+            for i in range(p["n"]):
+                self.corpus.append({
+                    "brand": brand, "product_sku": f"{brand[:2]}-{1000 + (i % 4)}",
+                    "category": cats[i % len(cats)], "region": p["region"],
+                    "created_at": _days_ago(8 + (i % 7)), "resolved": True,
+                    "csat_score": p["csat"][i % 7], "nps_score": p["nps"][i % 7],
+                    "ces_score": p["ces"][i % 7], "store_name": f"{brand} Store",
+                    "prior_week": True,
+                })
+
+        # Pre-seeded human queue items — represent tickets raised before the
+        # demo scenarios ran. Gives the queue the depth of a live system.
+        self.human_queue.extend([
+            {
+                "workflow_task_id": "WF-SEED-01",
+                "type": "PROCUREMENT_APPROVAL",
+                "sku": "DC-PAN20",
+                "store": "NESTO Dubai Festival City",
+                "reason": "DELAYED_PO",
+                "recommendation": (
+                    "PO-778412 with DELCASA-DIST-01 is 3 days overdue. "
+                    "Contact supplier immediately. Prepare emergency reorder "
+                    "if unresolved within 24 hours."
+                ),
+                "assigned_to": "Procurement Buyer Desk",
+                "status": "pending_approval",
+                "priority": "standard",
+                "ts": _days_ago(0.5).isoformat(),
+            },
+            {
+                "workflow_task_id": "WF-SEED-02",
+                "type": "WARRANTY_FULFILLMENT",
+                "claim_id": "CLM-SEED-01",
+                "brand": "OLSENMARK",
+                "product": "Olsenmark Air Conditioner OM-AC12",
+                "declared_value_aed": 850.0,
+                "priority": "HIGH (>AED 500)",
+                "assigned_to": "Warranty Desk",
+                "status": "pending_approval",
+                "drafted_message": (
+                    "Dear valued customer, we are pleased to confirm that your "
+                    "warranty claim for the Olsenmark Air Conditioner OM-AC12 has "
+                    "been approved. Our warranty team will contact you within 24 hours "
+                    "to arrange collection and replacement. We sincerely apologise for "
+                    "any inconvenience caused."
+                ),
+                "ts": _days_ago(0.3).isoformat(),
+            },
+            {
+                "workflow_task_id": "WF-SEED-03",
+                "type": "PROCUREMENT_APPROVAL",
+                "sku": "KT-IRON21",
+                "store": "NESTO Abu Dhabi",
+                "reason": "VELOCITY_SPIKE",
+                "recommendation": (
+                    "New SKU KT-IRON21 showing 4 quality complaints in 3 days — "
+                    "no prior baseline. Recommend pausing further procurement pending "
+                    "quality investigation. Notify product team immediately."
+                ),
+                "assigned_to": "Procurement Buyer Desk",
+                "status": "pending_approval",
+                "priority": "standard",
+                "ts": _days_ago(0.1).isoformat(),
+            },
+        ])

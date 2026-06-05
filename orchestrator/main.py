@@ -14,6 +14,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from agents import agent1_intake, agent5_procurement, agent2_warranty
 from channels import (ecomm_listener, email_listener, qr_listener, whatsapp_listener)
@@ -24,6 +25,10 @@ from models.feedback_ticket import Brand, FeedbackChannel, FeedbackTicket, Langu
 
 app = FastAPI(title="WIG Customer Feedback Intelligence — Demo")
 WEB = Path(__file__).resolve().parent.parent / "web"
+
+# Static assets (self-hosted editorial fonts) — keeps the dashboard offline and
+# its single index.html lean. Not an API surface; serves files only.
+app.mount("/assets", StaticFiles(directory=WEB), name="assets")
 
 # App-level backend for live ingestion (the dashboard uses a fresh one per call).
 _BACKEND = DemoBackend()
