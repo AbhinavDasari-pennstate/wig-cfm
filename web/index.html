@@ -38,9 +38,14 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 .app{display:grid;grid-template-columns:220px 1fr 320px;grid-template-rows:52px calc(100vh - 52px);height:100vh;overflow:hidden;transition:grid-template-columns .26s cubic-bezier(.4,0,.2,1);}
 .app.copilot{grid-template-columns:1fr;}
 .app.copilot .rail,.app.copilot .sidebar{display:none;}
-.app.nav-collapsed{grid-template-columns:0 1fr 320px;}
-.app.nav-collapsed .sidebar{border-right:0;opacity:0;}
-.sidebar{overflow-x:hidden;transition:opacity .18s ease;}
+.app.nav-collapsed{grid-template-columns:60px 1fr 320px;}
+.sidebar{overflow-x:hidden;}
+.app.nav-collapsed .sb-item{justify-content:center;padding:9px 0;margin:1px 8px;border-radius:9px;border-left-width:0;}
+.app.nav-collapsed .sb-item.active{background:#fff;box-shadow:0 0 0 1.5px var(--teal) inset,var(--sh1);}
+.app.nav-collapsed .sb-label{display:none;}
+.app.nav-collapsed .sb-dot{width:9px;height:9px;}
+.app.nav-collapsed .sb-badge{position:absolute;top:2px;right:6px;min-width:0;padding:0 4px;font-size:8px;line-height:13px;}
+.app.nav-collapsed .sb-footer{display:none;}
 .nav-toggle{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);cursor:pointer;margin-right:14px;flex:none;transition:background .12s;}
 .nav-toggle:hover{background:rgba(255,255,255,.14);color:#fff;}
 .nav-toggle svg{width:15px;height:15px;}
@@ -773,7 +778,14 @@ async function boot() {
 /* ─────────────── NAV TOGGLE ─────────────── */
 function initNavToggle() {
   const btn = qs('#nav-toggle');
-  const toggle = () => { if(!COPILOT) qs('#app').classList.toggle('nav-collapsed'); };
+  let saved = null;
+  try { saved = localStorage.getItem('wig-nav'); } catch(e) {}
+  if(saved === 'collapsed') qs('#app').classList.add('nav-collapsed');
+  const toggle = () => {
+    if(COPILOT) return;
+    const collapsed = qs('#app').classList.toggle('nav-collapsed');
+    try { localStorage.setItem('wig-nav', collapsed ? 'collapsed' : 'expanded'); } catch(e) {}
+  };
   if(btn) btn.onclick = toggle;
   document.addEventListener('keydown', e => {
     if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='b') { e.preventDefault(); toggle(); }
@@ -1015,6 +1027,7 @@ function buildSidebar() {
   NAV_ITEMS.forEach(item => {
     const badgeCount = badge(item);
     const div = el('div', 'sb-item' + (item.key === ACTIVE ? ' active' : ''));
+    div.title = item.label;
     div.innerHTML = `<span class="sb-dot" style="background:${item.dot}"></span><span class="sb-label">${item.label}</span>`;
     if(badgeCount) {
       const b = txt('span', 'sb-badge' + (item.key === 'queue' ? ' brass' : ''), badgeCount);
