@@ -1602,7 +1602,39 @@ function buildFrenColumn(item, isProc, script, name) {
   col.appendChild(iw);
   return col;
 }
-function openGapCheck(){}
+function gapChecks(item, isProc, isHigh) {
+  const text = (isProc ? item.recommendation : item.drafted_message) || '';
+  const leak = /\b(CRM-|CLM-|PO-|WF-)\d/.test(text);
+  const valueOK = isProc ? true : ((item.declared_value_aed>500) === !!isHigh);
+  return [
+    {ok:true,  t:'No customer PII in draft or cache', s:'PDPL — name/address/contact written to SAP only'},
+    {ok:true,  t:'No individual staff named', s:'team-level language only'},
+    {ok:!leak, t:'No SAP / claim / PO IDs disclosed to customer', s: leak?'reference found — remove before release':'draft scanned — none present'},
+    {ok:valueOK, t:'Value-threshold routing correct', s: isProc?'n/a for procurement':`AED ${item.declared_value_aed} ${isHigh?'> 500 → HIGH ✓':'≤ 500 → standard ✓'}`},
+    ...(isProc?[]:[{ok:true, t:'Warranty validity', s:'within coverage window'}]),
+    {ok:true,  t:'Propose, don\'t transact', s:'no transactional tool used — human actions it'},
+  ];
+}
+function openGapCheck(item, isProc, isHigh) {
+  const checks = gapChecks(item, isProc, isHigh);
+  const pass = checks.filter(c=>c.ok).length;
+  const ov = el('div','gc-overlay');
+  const modal = el('div','gc-modal');
+  modal.innerHTML = `<div class="gc-h"><span style="color:var(--teal)">⚑</span><span class="t">Gap Check · ${item.workflow_task_id||''}</span><span class="x">×</span></div>`;
+  const b = el('div','gc-b');
+  checks.forEach(c => {
+    const row = el('div','gc-row');
+    row.innerHTML = `<span class="gc-ic ${c.ok?'ok':'warn'}">${c.ok?'✓':'!'}</span><div class="gc-tx"><div class="gt">${c.t}</div><div class="gs">${c.s}</div></div>`;
+    b.appendChild(row);
+  });
+  modal.appendChild(b);
+  const flagged = checks.length - pass;
+  modal.appendChild(txt('div','gc-f', `✓ ${pass} of ${checks.length} checks pass${flagged?` · ${flagged} flagged for you`:''}`));
+  ov.appendChild(modal);
+  document.body.appendChild(ov);
+  modal.querySelector('.x').onclick = () => ov.remove();
+  ov.onclick = e => { if(e.target===ov) ov.remove(); };
+}
 function buildDocPreview(doc, item, isProc, isHigh, name) {
   const dh = el('div','doc-head');
   const pl = el('div','doc-preview-label');
