@@ -581,6 +581,12 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
   .cp .col,.cp .col-fren{position:static;transform:none;width:auto;max-width:none;border-left:0;border-top:1px solid var(--line);box-shadow:none;}
   .fren-dock{right:0;left:0;bottom:0;width:auto;border-radius:16px 16px 0 0;height:70vh;}
 }
+/* ── USER MENU ── */
+.user-pop{position:absolute;top:38px;right:0;width:230px;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--sh2);z-index:300;overflow:hidden;padding:4px 0;}
+.user-pop .up-head{font-family:var(--serif);font-size:13.5px;font-weight:600;color:var(--ink);padding:10px 14px 8px;border-bottom:1px solid var(--line);}
+.user-pop .up-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:6px 14px;}
+.user-pop .up-row .k{color:var(--faint);}
+.user-pop .up-row .v{color:var(--ink2);font-weight:500;}
 </style>
 </head>
 <body>
@@ -776,6 +782,7 @@ async function boot() {
   render(ACTIVE);
   initSearch();
   initBell();
+  initUserMenu();
   mountFren();
   initNavToggle();
 }
@@ -1022,6 +1029,24 @@ function initBell() {
     bell.appendChild(pop);
   };
   document.addEventListener('click', e => { const p = qs('.bell-pop'); if(p && !bell.contains(e.target)) p.remove(); });
+}
+function initUserMenu() {
+  const u = qs('.tb-user');
+  if(!u) return;
+  u.style.position = 'relative';
+  u.onclick = e => {
+    e.stopPropagation();
+    const existing = qs('.user-pop');
+    if(existing) { existing.remove(); return; }
+    const pop = el('div','user-pop');
+    pop.innerHTML = `
+      <div class="up-head">Ahmed Al-Mansoori</div>
+      <div class="up-row"><span class="k">Role</span><span class="v">Dept Head</span></div>
+      <div class="up-row"><span class="k">Scope</span><span class="v">All Brands</span></div>
+      <div class="up-row"><span class="k">Session</span><span class="v">demo · no real auth</span></div>`;
+    u.appendChild(pop);
+  };
+  document.addEventListener('click', e => { const p = qs('.user-pop'); if(p && !u.contains(e.target)) p.remove(); });
 }
 
 /* ─────────────── SIDEBAR ─────────────── */
