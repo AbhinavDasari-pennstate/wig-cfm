@@ -1424,7 +1424,91 @@ function renderCopilot(item, main) {
   const fi = qs('#fren-input');
   if(fi) fi.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendFrenMsg(); } });
 }
-function buildCtxColumn(){ return el('div','col col-ctx'); }
+function buildTimelineSteps(item, isProc) {
+  const ch = channelLabel(item.channel || 'EMAIL');
+  if(isProc) {
+    const reason = item.reason || 'OUT_OF_STOCK';
+    const action = reason==='DELAYED_PO'
+      ? {what:'Agent 5 found open PO — 3 days overdue', agent:'PO-778412 · supplier flagged'}
+      : reason==='VELOCITY_SPIKE'
+        ? {what:'Agent 3 flagged velocity spike', agent:'new SKU · 4 complaints in 3d'}
+        : {what:'Agent 5 diagnosed stock gap', agent:'0 shelf · 0 backroom'};
+    return [
+      {when:'06:02 GST', what:'Signal received', agent:`via ${ch}`},
+      {when:'06:15 GST', what:'Agent 1 triaged → procurement', agent:'routed to Agent 5'},
+      {when:'06:16 GST', what:action.what, agent:action.agent},
+      {when:'06:16 GST', what:'Recommendation prepared for buyer', agent:'no PO placed — propose only'},
+      {when:'now', what:'Awaiting your approval', agent:'nothing dispatched yet', now:true},
+    ];
+  }
+  const high = item.priority && item.priority.toString().toUpperCase().startsWith('HIGH');
+  return [
+    {when:'06:02 GST', what:'Feedback received', agent:`via ${ch}`},
+    {when:'06:14 GST', what:'Agent 1 triaged → WARRANTY_RETURN', agent:'routed to Agent 2'},
+    {when:'06:15 GST', what:'Agent 2 checked warranty → valid', agent:`claim ${item.claim_id||'opened'}`},
+    {when:'06:15 GST', what:`Value AED ${item.declared_value_aed} ${high?'> 500 → routed HIGH':'≤ 500 → standard'}`, agent:'deterministic rule'},
+    {when:'now', what:'Reply drafted · awaiting approval', agent:'no message sent yet', now:true},
+  ];
+}
+function precedentFor(item, isProc) {
+  const idx = REPORT.precedent_index || {};
+  const brand = isProc ? (SKU_NAMES[item.sku]||'').split(' ')[0].toUpperCase() : (item.brand||'');
+  const rec = idx[brand];
+  if(!rec) return null;
+  const cat = isProc ? 'PRODUCT_QUALITY' : 'WARRANTY_RETURN';
+  const catCount = (rec.by_category||{})[cat] || 0;
+  const label = cat.replace('_',' ').toLowerCase();
+  if(catCount > 0) return `<b>${catCount} similar ${brand} ${label} case${catCount!==1?'s':''}</b> on record · ${rec.resolved} resolved.`;
+  return `<b>${rec.total} ${brand} case${rec.total!==1?'s':''}</b> on record · ${rec.resolved} resolved. No prior on this exact issue.`;
+}
+function buildCtxColumn(item, isProc, isHigh, name) {
+  const col = el('div','col col-ctx');
+
+  col.appendChild(txt('div','ck','◷ Case timeline'));
+  const tlCard = el('div','ctx-card');
+  const tl = el('div','tl');
+  buildTimelineSteps(item, isProc).forEach(s => {
+    const step = el('div','tl-step'+(s.now?' now':''));
+    step.innerHTML = `<div class="tl-when">${s.when}</div><div class="tl-what">${s.what}</div><div class="tl-agent">${s.agent}</div>`;
+    tl.appendChild(step);
+  });
+  tlCard.appendChild(tl);
+  col.appendChild(tlCard);
+
+  col.appendChild(txt('div','ck','⚖ Policy & precedent'));
+  const pCard = el('div','ctx-card');
+  if(isProc) {
+    pCard.innerHTML = `<div class="ctx-title">Procurement context</div>
+      <div class="kv"><span class="k">Shelf stock</span><span class="v">0</span></div>
+      <div class="kv"><span class="k">Backroom</span><span class="v">0</span></div>
+      <div class="kv"><span class="k">Store</span><span class="v">${item.store||'—'}</span></div>
+      <div class="kv"><span class="k">Trigger</span><span class="v">${(item.reason||'—').replace('_',' ')}</span></div>`;
+  } else {
+    pCard.innerHTML = `<div class="ctx-title">Warranty policy</div>
+      <div class="kv"><span class="k">Coverage</span><span class="v">1-year standard</span></div>
+      <div class="kv"><span class="k">Window</span><span class="v">Valid</span></div>
+      <div class="kv"><span class="k">High-value gate</span><span class="v">&gt; AED 500</span></div>
+      <div class="kv"><span class="k">This claim</span><span class="v">AED ${item.declared_value_aed} ${isHigh?'→ HIGH':'→ standard'}</span></div>`;
+  }
+  const prec = precedentFor(item, isProc);
+  if(prec) { const p = el('div','prec'); p.innerHTML = `◆ <span>${prec}</span>`; pCard.appendChild(p); }
+  col.appendChild(pCard);
+
+  col.appendChild(txt('div','ck','◷ Your notes'));
+  const nCard = el('div','ctx-card');
+  const ta = el('textarea','notes-area'); ta.placeholder = 'Add a note for the desk…';
+  ta.value = NOTES[item.workflow_task_id] || '';
+  const saved = el('div','notes-saved'); saved.style.display = ta.value.trim()?'flex':'none'; saved.innerHTML = '✓ Saved · session only';
+  ta.addEventListener('input', () => {
+    NOTES[item.workflow_task_id] = ta.value;
+    saved.style.display = ta.value.trim()?'flex':'none';
+    const notesBtn = Array.from(document.querySelectorAll('.cpb')).find(b => b.textContent.includes('Notes'));
+    if(notesBtn) notesBtn.innerHTML = '◷ Notes '+(ta.value.trim()?'<span class="ct">1</span>':'');
+  });
+  nCard.append(ta, saved);
+  col.appendChild(nCard);
+  return col;
+}
 function buildDocColumn(){ return el('div','col col-doc'); }
 function buildFrenColumn(){ return el('div','col col-fren'); }
 function openGapCheck(){}
