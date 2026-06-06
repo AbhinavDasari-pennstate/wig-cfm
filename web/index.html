@@ -36,8 +36,8 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 
 /* ── APP GRID ── */
 .app{display:grid;grid-template-columns:220px 1fr 320px;grid-template-rows:52px calc(100vh - 52px);height:100vh;overflow:hidden;}
-.app.copilot{grid-template-columns:220px 1fr;}
-.app.copilot .rail{display:none;}
+.app.copilot{grid-template-columns:1fr;}
+.app.copilot .rail,.app.copilot .sidebar{display:none;}
 
 /* ── TOPBAR ── */
 .topbar{grid-column:1/-1;grid-row:1;background:var(--ink);display:flex;align-items:center;gap:0;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06);z-index:100;}
@@ -360,6 +360,90 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 .cp-modal-btn{padding:8px 18px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--line);}
 .cp-modal-btn.cancel{background:var(--card);color:var(--dim);}
 .cp-modal-btn.confirm{background:var(--teal);color:#fff;border-color:var(--teal);}
+
+/* ── COPILOT CONSOLE v2 (3-column immersive) ── */
+.cp{display:grid;grid-template-columns:288px 1fr 332px;height:calc(100vh - 52px);overflow:hidden;}
+.cp-head{grid-column:1/-1;display:flex;align-items:center;gap:0;padding:0 22px;height:50px;border-bottom:1px solid var(--line);background:var(--paper2);}
+.cp-back{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--teal);cursor:pointer;font-weight:600;padding:5px 11px;border-radius:6px;}
+.cp-back:hover{background:var(--teal-soft);}
+.cp-crumb{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:7px;margin-left:6px;}
+.cp-crumb .sep{color:var(--faint);}
+.cp-crumb .cur{font-weight:600;color:var(--ink);}
+.cp-actions{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.cpb{font-size:11.5px;padding:6px 13px;border-radius:7px;border:1px solid var(--line2);background:var(--card);cursor:pointer;font-weight:500;display:flex;align-items:center;gap:6px;}
+.cpb:hover{background:var(--paper2);}
+.cpb.primary{background:var(--teal);color:#fff;border-color:var(--teal);}
+.cpb.primary:hover{background:var(--teal-ink);}
+.cpb .ct{background:var(--blood);color:#fff;font-size:9px;font-weight:700;border-radius:999px;padding:0 5px;}
+.col{overflow-y:auto;}
+.col-ctx{border-right:1px solid var(--line);background:var(--card2);padding:18px 16px 30px;}
+.col-doc{background:var(--card);padding:0;display:flex;flex-direction:column;}
+.doc-scroll{flex:1;overflow-y:auto;}
+.col-fren{border-left:1px solid var(--line);background:var(--card);display:flex;flex-direction:column;}
+.ck{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:7px;margin:4px 2px 12px;}
+.ctx-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 15px;margin-bottom:14px;box-shadow:var(--sh1);}
+.ctx-title{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-ink);margin-bottom:12px;}
+.tl{position:relative;padding-left:20px;}
+.tl::before{content:"";position:absolute;left:5px;top:4px;bottom:8px;width:1.5px;background:linear-gradient(180deg,var(--teal),#CFE0DD);}
+.tl-step{position:relative;padding:0 0 14px;}
+.tl-step:last-child{padding-bottom:0;}
+.tl-step::before{content:"";position:absolute;left:-19px;top:2px;width:10px;height:10px;border-radius:50%;background:var(--card);border:2px solid var(--teal);}
+.tl-step.now::before{background:var(--brass);border-color:var(--brass);box-shadow:0 0 0 3px var(--brass-soft);}
+.tl-when{font-family:var(--mono);font-size:9.5px;color:var(--faint);}
+.tl-what{font-size:12px;color:var(--ink2);font-weight:500;margin-top:1px;}
+.tl-agent{font-size:10.5px;color:var(--teal-ink);}
+.kv{display:grid;grid-template-columns:1fr auto;gap:5px 8px;font-size:12px;margin-bottom:5px;}
+.kv .k{color:var(--faint);}
+.kv .v{color:var(--ink);font-weight:500;text-align:right;}
+.prec{margin-top:10px;background:var(--teal-soft);border:1px solid #C8DDD9;border-radius:8px;padding:9px 11px;font-size:11.5px;color:var(--teal-ink);display:flex;gap:7px;align-items:flex-start;}
+.prec b{font-weight:700;}
+.notes-area{width:100%;min-height:70px;border:1px solid var(--line2);border-radius:8px;background:var(--card2);padding:9px 11px;font-family:var(--sans);font-size:12px;color:var(--ink);resize:vertical;outline:0;}
+.notes-area:focus{border-color:var(--teal);}
+.notes-saved{font-size:10.5px;color:var(--teal-ink);margin-top:6px;display:flex;align-items:center;gap:5px;}
+.col-doc .doc-head{padding:18px 26px 14px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5;}
+.doc-pl{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.doc-pl .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);}
+.col-doc .doc-body{padding:22px 26px 40px;max-width:640px;}
+.doc-sec{margin-bottom:24px;}
+.doc-sec-t{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:12px;}
+.col-doc .doc-kv{display:grid;grid-template-columns:140px 1fr;gap:6px 14px;font-size:13px;margin-bottom:5px;}
+.reply{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px;font-size:14px;line-height:1.7;color:var(--ink2);}
+.reply[dir="rtl"]{text-align:right;font-size:15px;line-height:1.9;}
+.reply-tools{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap;}
+.rtool{font-size:11px;padding:5px 11px;border:1px solid var(--line2);border-radius:6px;background:var(--card2);color:var(--dim);cursor:pointer;}
+.rtool:hover{background:var(--paper2);}
+.rtool.active{background:var(--teal-soft);color:var(--teal-ink);border-color:#C8DDD9;font-weight:600;}
+.flow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.flow-step{position:relative;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:13px;}
+.flow-step .n{font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--brass-ink);margin-bottom:7px;}
+.flow-step .ft{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:3px;}
+.flow-step .fs{font-size:10.5px;color:var(--dim);line-height:1.4;}
+.flow-step:not(:last-child)::after{content:"→";position:absolute;right:-8px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:13px;z-index:1;}
+.doc-foot{border-top:1px solid var(--line);background:var(--card2);padding:13px 26px;display:flex;align-items:center;gap:14px;}
+.doc-foot .fnote{font-size:11.5px;color:var(--dim);font-style:italic;flex:1;}
+.foot-btn{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;}
+.foot-btn:hover{background:var(--teal-ink);}
+.fren-ctx{padding:9px 14px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:5px;background:var(--card2);}
+.ctxchip{font-size:10px;font-family:var(--mono);color:var(--teal-ink);background:var(--teal-soft);border:1px solid #C8DDD9;border-radius:5px;padding:2px 7px;}
+.fchips{padding:8px 14px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:6px;flex:none;max-height:150px;overflow-y:auto;}
+.fchips-label{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);padding:0 2px 2px;}
+.finput{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);flex:none;align-items:flex-end;}
+.fsend{background:var(--teal);color:#fff;border:0;border-radius:7px;padding:8px 13px;cursor:pointer;font-size:13px;}
+.fsend:hover{background:var(--teal-ink);}
+.gc-overlay{position:fixed;inset:0;background:rgba(26,26,24,.42);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:90px;}
+.gc-modal{background:var(--card);border:1px solid var(--line2);border-radius:16px;width:520px;max-width:92%;box-shadow:0 30px 70px rgba(0,0,0,.32);overflow:hidden;}
+.gc-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;background:var(--card2);}
+.gc-h .t{font-family:var(--serif);font-size:17px;font-weight:600;}
+.gc-h .x{margin-left:auto;cursor:pointer;color:var(--dim);font-size:20px;}
+.gc-b{padding:10px 20px 18px;}
+.gc-row{display:flex;align-items:flex-start;gap:11px;padding:11px 0;border-bottom:1px dashed var(--line);}
+.gc-row:last-child{border-bottom:0;}
+.gc-ic{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none;margin-top:1px;}
+.gc-ic.ok{background:var(--teal-soft);color:var(--teal-ink);}
+.gc-ic.warn{background:var(--brass-soft);color:var(--brass-ink);}
+.gc-tx .gt{font-size:12.5px;font-weight:600;color:var(--ink);}
+.gc-tx .gs{font-size:11px;color:var(--dim);margin-top:1px;}
+.gc-f{padding:13px 20px;border-top:1px solid var(--line);background:var(--card2);font-size:11.5px;color:var(--teal-ink);display:flex;align-items:center;gap:7px;}
 
 /* ── TREND + CHANNEL ── */
 .trend-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:20px;}
@@ -1302,53 +1386,48 @@ function closeCopilot() {
   qs('#app').classList.remove('copilot');
   render(ACTIVE);
 }
+const NOTES = {};   // workflow_task_id -> operator note (session only)
 function renderCopilot(item, main) {
   const isProc = item.type === 'PROCUREMENT_APPROVAL';
   const isHigh = item.priority && item.priority.toString().toUpperCase().startsWith('HIGH');
   const name = isProc ? (SKU_NAMES[item.sku]||item.sku) : (item.product||'Warranty Claim');
   const script = FREN_SCRIPTS[isProc ? item.sku : (item.brand||'_default')] || FREN_SCRIPTS['_default'];
 
-  const wrap = el('div','copilot-wrap');
-
-  // Header bar
-  const ch = el('div','copilot-head');
-  const back = el('span','copilot-back','◁ Queue');
-  back.onclick = closeCopilot;
-  const crumb = el('div','copilot-crumb');
+  const cp = el('div','cp');
+  const ch = el('div','cp-head');
+  const back = el('span','cp-back','◁ Queue'); back.onclick = closeCopilot;
+  const crumb = el('div','cp-crumb');
   crumb.innerHTML = `<span>Queue</span><span class="sep">›</span><span>${item.workflow_task_id||'—'}</span><span class="sep">›</span><span class="cur">${isProc?'Procurement':'Warranty'} · Review</span>`;
-  ch.appendChild(back);
-  ch.appendChild(crumb);
-  const actions = el('div','copilot-actions');
-  const frenBtn = el('div','cp-action');
-  frenBtn.innerHTML = '<span class="fren-dot"></span> fren assisted';
-  const saveBtn = el('div','cp-action','◷ Save Notes');
-  const gapBtn = el('div','cp-action','⚑ Gap Check');
-  const submitBtn = el('div','cp-action primary', isProc ? 'Forward to Buyer Desk →' : 'Release to Warranty Desk →');
+  const actions = el('div','cp-actions');
+  const frenBtn = el('div','cpb'); frenBtn.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block"></span> fren assisted';
+  frenBtn.onclick = () => { const fi = qs('#fren-input'); if(fi){ fi.focus(); fi.scrollIntoView({behavior:'smooth',block:'center'}); } };
+  const noteCount = (NOTES[item.workflow_task_id]||'').trim() ? '<span class="ct">1</span>' : '';
+  const notesBtn = el('div','cpb'); notesBtn.innerHTML = '◷ Notes '+noteCount;
+  notesBtn.onclick = () => { const t = qs('.notes-area'); if(t){ t.focus(); t.scrollIntoView({behavior:'smooth',block:'center'}); } };
+  const gapBtn = el('div','cpb','⚑ Gap Check'); gapBtn.onclick = () => openGapCheck(item, isProc, isHigh);
+  const submitBtn = el('div','cpb primary', isProc ? 'Forward to Buyer Desk →' : 'Release to Warranty Desk →');
   submitBtn.onclick = () => showConfirmModal(item, isProc);
-  actions.append(frenBtn, saveBtn, gapBtn, submitBtn);
-  ch.appendChild(actions);
-  wrap.appendChild(ch);
+  actions.append(frenBtn, notesBtn, gapBtn, submitBtn);
+  ch.append(back, crumb, actions);
+  cp.appendChild(ch);
 
-  // Left: document preview
-  const doc = el('div','copilot-doc');
-  buildDocPreview(doc, item, isProc, isHigh, name);
-  wrap.appendChild(doc);
-
-  // Right: fren panel
-  const fren = el('div','fren-panel');
-  buildFrenPanel(fren, item, script, name);
-  wrap.appendChild(fren);
+  cp.appendChild(buildCtxColumn(item, isProc, isHigh, name));
+  cp.appendChild(buildDocColumn(item, isProc, isHigh, name));
+  cp.appendChild(buildFrenColumn(item, isProc, script, name));
 
   main.innerHTML = '';
-  main.appendChild(wrap);
+  main.appendChild(cp);
 
   if(!FREN_HIST.length) setTimeout(() => appendFrenMsg('fren', script.open), 400);
   FREN_CHIPS = script.chips;
   renderFrenChips();
-  qs('.fren-input') && qs('.fren-input').addEventListener('keydown', e => {
-    if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendFrenMsg(); }
-  });
+  const fi = qs('#fren-input');
+  if(fi) fi.addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendFrenMsg(); } });
 }
+function buildCtxColumn(){ return el('div','col col-ctx'); }
+function buildDocColumn(){ return el('div','col col-doc'); }
+function buildFrenColumn(){ return el('div','col col-fren'); }
+function openGapCheck(){}
 function buildDocPreview(doc, item, isProc, isHigh, name) {
   const dh = el('div','doc-head');
   const pl = el('div','doc-preview-label');
@@ -1533,8 +1612,7 @@ function showConfirmModal(item, isProc) {
     item._actioned = true;
     item._actionLabel = isProc ? 'Forwarded' : 'Released';
     refreshBadges();
-    const sub = qs('.copilot-actions .cp-action.primary');
-    if(sub) { sub.textContent = '✓ ' + item._actionLabel; sub.style.opacity = '.7'; sub.onclick = null; }
+    document.querySelectorAll('.cp-actions .cpb.primary, .doc-foot .foot-btn').forEach(sub => { sub.textContent = '✓ ' + item._actionLabel; sub.style.opacity = '.7'; sub.onclick = null; });
     appendFrenMsg('fren', `Done — ${item.workflow_task_id||'this item'} has been forwarded to ${desk}. They will review and action it. It is marked ${item._actionLabel.toLowerCase()} in the queue.`);
   };
   overlay.onclick = e => { if(e.target === overlay) overlay.remove(); };
