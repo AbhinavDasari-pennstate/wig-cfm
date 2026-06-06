@@ -1509,7 +1509,68 @@ function buildCtxColumn(item, isProc, isHigh, name) {
   col.appendChild(nCard);
   return col;
 }
-function buildDocColumn(){ return el('div','col col-doc'); }
+function buildDocColumn(item, isProc, isHigh, name) {
+  const col = el('div','col col-doc');
+  const head = el('div','doc-head');
+  head.innerHTML = `<div class="doc-pl"><span class="dot"></span> Live preview ${isHigh?'<span class="doc-flag">⚑ High priority</span>':''} <span class="doc-status">Recommendation drafted</span></div>`;
+  col.appendChild(head);
+
+  const scroll = el('div','doc-scroll');
+  const body = el('div','doc-body');
+
+  const sum = el('div','doc-sec');
+  sum.innerHTML = `<div class="doc-sec-t">${isProc?'Procurement recommendation':'Warranty fulfilment approval'} · <span class="mono" style="font-weight:400;color:var(--faint)">${item.workflow_task_id||'—'}</span></div>`;
+  const kvs = isProc
+    ? [['SKU',item.sku||'—'],['Product',name],['Store',item.store||'—'],['Trigger',(item.reason||'—').replace('_',' ')]]
+    : [['Claim ID',item.claim_id||'—'],['Product',name],['Declared value',`AED ${item.declared_value_aed} ${isHigh?'<span class="badge blood">HIGH</span>':''}`],['Warranty','Valid'],['Assigned to',item.assigned_to||'Warranty Desk']];
+  kvs.forEach(([k,v]) => { const r = el('div','doc-kv'); r.innerHTML = `<span class="k">${k}</span><span class="v">${v}</span>`; sum.appendChild(r); });
+  body.appendChild(sum);
+
+  const draft = el('div','doc-sec');
+  draft.innerHTML = `<div class="doc-sec-t">${isProc?'Agent recommendation':'Drafted reply · Agent 2'}</div>`;
+  if(isProc) {
+    draft.appendChild(txt('div','reply', item.recommendation||'—'));
+  } else {
+    const msg = item.drafted_message || '—';
+    const isArabic = /[؀-ۿ]/.test(msg);
+    const tools = el('div','reply-tools');
+    tools.innerHTML = isArabic
+      ? '<span class="rtool active">العربية</span><span class="rtool">English</span><span class="rtool">✎ Edit</span><span class="rtool">Adjust tone</span>'
+      : '<span class="rtool active">English</span><span class="rtool">✎ Edit</span><span class="rtool">Adjust tone</span>';
+    tools.querySelectorAll('.rtool').forEach(rt => rt.onclick = () => {
+      const label = rt.textContent.trim();
+      if(label==='✎ Edit' || label==='Adjust tone') { const fi = qs('#fren-input'); if(fi){ fi.value = label==='Adjust tone' ? 'Adjust the tone of this reply' : 'Help me edit this reply'; fi.focus(); } return; }
+      tools.querySelectorAll('.rtool').forEach(x=>x.classList.remove('active')); rt.classList.add('active');
+    });
+    draft.appendChild(tools);
+    const rep = el('div','reply'); if(isArabic){ rep.dir='rtl'; rep.style.fontFamily='var(--ar)'; } rep.textContent = msg;
+    draft.appendChild(rep);
+  }
+  body.appendChild(draft);
+
+  const flowSec = el('div','doc-sec');
+  flowSec.innerHTML = `<div class="doc-sec-t">On ${isProc?'forward':'release'} · what happens next</div>`;
+  const flow = el('div','flow');
+  flow.innerHTML = `
+    <div class="flow-step"><div class="n">1 · ${isProc?'Desk':'Customer'}</div><div class="ft">${isProc?'Buyer Desk reviews':'Customer receives the reply'}</div><div class="fs">${isProc?'human decides on the PO':'once the desk signs off'}</div></div>
+    <div class="flow-step"><div class="n">2 · Survey</div><div class="ft">CSAT / NPS / CES sent</div><div class="fs">satisfaction survey follows resolution</div></div>
+    <div class="flow-step"><div class="n">3 · SAP</div><div class="ft">Resolution written back</div><div class="fs">scores + notes → CRM · agents don't own the data</div></div>`;
+  flowSec.appendChild(flow);
+  body.appendChild(flowSec);
+
+  scroll.appendChild(body);
+  col.appendChild(scroll);
+
+  const foot = el('div','doc-foot');
+  const note = txt('span','fnote', isProc
+    ? 'Forwarding notifies the Buyer Desk. You\'re proposing — not transacting.'
+    : `Releasing notifies the Warranty Desk to action ${item.claim_id||'this claim'}. You're proposing — not transacting.`);
+  const btn = el('button','foot-btn', isProc ? 'Forward to Buyer Desk →' : 'Release to Warranty Desk →');
+  btn.onclick = () => showConfirmModal(item, isProc);
+  foot.append(note, btn);
+  col.appendChild(foot);
+  return col;
+}
 function buildFrenColumn(){ return el('div','col col-fren'); }
 function openGapCheck(){}
 function buildDocPreview(doc, item, isProc, isHigh, name) {
