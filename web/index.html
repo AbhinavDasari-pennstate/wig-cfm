@@ -536,6 +536,11 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 .cl-sap{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--teal-ink);background:var(--teal-soft);border:1px solid #C8DDD9;border-radius:6px;padding:3px 9px;font-weight:600;width:max-content;}
 .cl-note{font-size:10.5px;color:var(--faint);font-style:italic;margin-top:14px;text-align:center;}
 
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:10px;font-size:12.5px;box-shadow:0 14px 34px -10px rgba(0,0,0,.45);z-index:500;opacity:0;transition:opacity .2s ease,transform .2s ease;display:flex;align-items:center;gap:9px;max-width:420px;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast .tk{color:var(--teal);font-weight:700;}
+
 /* ── QUEUE STATUS ── */
 .dr-row-done{opacity:.6;}
 .badge.done{background:var(--teal-soft);color:var(--teal-ink);border:1px solid #C8DDD9;}
@@ -2185,10 +2190,26 @@ function railAlert(rail, alert) {
           <div class="action-chip"><div><div class="label">Notify Product Team</div><div class="sub">Raise awareness of quality signal</div></div><span>→</span></div>
           <div class="action-chip"><div><div class="label">Escalate to Quality Review</div><div class="sub">Open formal investigation</div></div><span>→</span></div>
         </div>
-        <div class="propose-note">Display-only — propose, don't transact</div>
+        <div class="propose-note">Proposing notifies a person — agents don't transact</div>
       </div>
     </div>
   `;
+  rail.querySelectorAll('.action-chip').forEach(chip => {
+    chip.onclick = () => {
+      if(chip.dataset.done) return;
+      const label = chip.querySelector('.label').textContent;
+      const team = label.toLowerCase().includes('product') ? 'the Product Team' : 'Quality Review';
+      toast(`Proposed to ${team} — ${alert.brand} ${alert.sku||alert.product_sku}. A person will action it.`);
+      chip.dataset.done = '1'; chip.style.opacity = '.6';
+      const arrow = chip.querySelector('span:last-child'); if(arrow) arrow.textContent = '✓';
+    };
+  });
+}
+function toast(msg) {
+  const t = el('div','toast'); t.innerHTML = `<span class="tk">✓</span> <span>${msg}</span>`;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 250); }, 2800);
 }
 function railRun(rail, sc) {
   const out = outcomeFor(sc);
