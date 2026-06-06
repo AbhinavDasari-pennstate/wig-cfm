@@ -623,6 +623,14 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 .rv-score{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;}
 .rv-score .k{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);}
 .rv-score .v{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--ink);margin-top:4px;}
+/* ── INTERVENE PANEL ── */
+.rv-fren{display:flex;flex-direction:column;border-left:1px solid var(--line);background:var(--card);overflow:hidden;}
+.rv-fren-head{background:linear-gradient(135deg,var(--brass-soft),var(--card));}
+.fren-avatar.brass{background:var(--brass);}
+.fren-live.brass{color:var(--brass-ink);}
+.fren-live.brass .d{background:var(--brass);}
+.fsend.brass{background:var(--brass);}
+.rv-iv-banner{font-size:11px;line-height:1.5;color:var(--brass-ink);background:var(--brass-soft);border-bottom:1px solid var(--line);padding:10px 14px;}
 @media (max-width: 900px){
   .rv{height:auto;}
   .rv-grid,.rv.fren-open .rv-grid{grid-template-columns:1fr;}
@@ -1485,6 +1493,26 @@ function renderQueueList(wrap, queue, filter) {
 
   const list = el('div','data-list');
   items.forEach(item => {
+    if(item.type === 'INTERVENTION') {
+      const row = el('div','data-row'+(item._actioned?' dr-row-done':''));
+      row.innerHTML = `
+        <div class="dr-main">
+          <div class="dr-top">
+            <span class="badge brass">Intervention</span>
+            ${item._actioned?`<span class="badge done">✓ ${item._actionLabel}</span>`:''}
+            <span class="dr-id">${item.workflow_task_id}</span>
+          </div>
+          <div class="dr-title">${item.kind}</div>
+          <div class="dr-sub">↩ ${item.source_title}</div>
+        </div>
+        <div class="dr-right">
+          <div class="dr-meta">${timeAgo(item.ts)}</div>
+          <div class="dr-meta">${item.assigned_to||'—'}</div>
+        </div>`;
+      row.onclick = () => openCopilot(item);
+      list.appendChild(row);
+      return;
+    }
     const isProc = item.type === 'PROCUREMENT_APPROVAL';
     const isHigh = item.priority && item.priority.toString().toUpperCase().startsWith('HIGH');
     const name = isProc ? (SKU_NAMES[item.sku]||item.sku) : (item.product||'Warranty Claim');
@@ -1639,6 +1667,125 @@ function buildRunArtifacts(sc) {
     col.appendChild(eq);
   }
   return col;
+}
+/* ─────────────── INTERVENE LOOP ─────────────── */
+function toggleIntervene(sc) {
+  RV_FREN_OPEN = !RV_FREN_OPEN;
+  renderRunView(sc, qs('#main'));
+}
+function buildIntervenePanel(sc) {
+  const col = el('div','rv-fren');
+  const head = el('div','fren-head rv-fren-head');
+  head.innerHTML = `<div class="fren-avatar brass">f</div><div><div class="fren-name">fren <span class="sub">· Intervention</span></div></div><div class="fren-live brass"><span class="d"></span> Drafting</div>`;
+  col.appendChild(head);
+
+  const banner = txt('div','rv-iv-banner', 'You’re reviewing a closed run. Anything you request is drafted and sent to the Human Queue for approval — nothing is re-sent automatically.');
+  col.appendChild(banner);
+
+  const msgs = el('div','fren-msgs'); msgs.id = 'iv-msgs';
+  col.appendChild(msgs);
+
+  const chipsWrap = el('div','fchips');
+  chipsWrap.appendChild(txt('div','fchips-label','Request a change'));
+  const inner = el('div'); inner.id = 'iv-chips';
+  chipsWrap.appendChild(inner);
+  col.appendChild(chipsWrap);
+
+  const iw = el('div','finput');
+  const inp = el('textarea','fren-input'); inp.id = 'iv-input'; inp.placeholder = 'Describe what else should happen…'; inp.rows = 1;
+  const send = el('button','fsend brass','→'); send.onclick = () => ivSubmit(sc, qs('#iv-input').value);
+  iw.append(inp, send);
+  col.appendChild(iw);
+  return col;
+}
+function initIntervene(sc) {
+  const msgs = qs('#iv-msgs');
+  if(msgs && !msgs.childElementCount) setTimeout(() => ivAppend('fren', 'What should change about this run? Pick a request or describe it — I’ll draft it and route it to the Human Queue for sign-off.'), 300);
+  renderIvChips(sc);
+  const inp = qs('#iv-input');
+  if(inp) inp.addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); ivSubmit(sc, inp.value); } });
+}
+function ivAppend(role, text) {
+  const msgs = qs('#iv-msgs'); if(!msgs) return;
+  const m = el('div','fren-msg '+(role==='fren'?'fren-side':'user-side'));
+  m.append(txt('div','fren-sender', role==='fren'?'fren · Intervention':'You'), txt('div','fren-bubble', text));
+  msgs.appendChild(m); msgs.scrollTop = msgs.scrollHeight;
+}
+function ivThinking(on) {
+  const msgs = qs('#iv-msgs'); if(!msgs) return;
+  if(on){ const t = el('div','fren-thinking'); t.id='iv-thinking'; t.innerHTML='<div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div>'; msgs.appendChild(t); msgs.scrollTop=msgs.scrollHeight; }
+  else { const t = qs('#iv-thinking'); if(t) t.remove(); }
+}
+function interveneChips(sc) {
+  const nums = agentNums(sc.stages);
+  const blob = (sc.title+' '+(sc.tagline||'')).toLowerCase();
+  if(nums.includes(5) || /procure|reorder|stock|supplier/.test(blob))
+    return ['Adjust order quantity','Hold the reorder','Switch supplier','Escalate to category manager'];
+  if(/safety|injection|manipulat|contained|block/.test(blob))
+    return ['Add to block-list review','Notify security'];
+  if(nums.includes(2) || /warrant|return|refund|replace/.test(blob))
+    return ['Redo the reply — warmer tone','Reclassify (not WARRANTY_RETURN)','Also flag to the quality team','Add a goodwill gesture proposal'];
+  return ['Redo the reply','Add a follow-up action','Escalate to a manager','Flag to the quality team'];
+}
+function renderIvChips(sc) {
+  const wrap = qs('#iv-chips'); if(!wrap) return;
+  wrap.innerHTML = '';
+  interveneChips(sc).forEach(c => {
+    const chip = txt('button','fren-chip', c);
+    chip.onclick = () => ivSubmit(sc, c);
+    wrap.appendChild(chip);
+  });
+}
+function deskForKind(kind) {
+  const k = (kind||'').toLowerCase();
+  if(/quant|reorder|supplier|category|order|hold/.test(k)) return 'Procurement Buyer Desk';
+  if(/security|block-list|block list/.test(k)) return 'Trust & Safety';
+  if(/quality/.test(k)) return 'Quality Review';
+  return 'Warranty Desk';
+}
+function draftForKind(sc, kind) {
+  return `Drafted at your request: "${kind}". A revised proposal for ${sc.title} has been prepared for the ${deskForKind(kind)} to review and action. Nothing has been re-sent to the customer.`;
+}
+function ivSubmit(sc, raw) {
+  const text = (raw||'').trim(); if(!text) return;
+  const inp = qs('#iv-input'); if(inp) inp.value = '';
+  const wrap = qs('#iv-chips'); if(wrap) wrap.innerHTML = '';
+  ivAppend('user', text);
+  ivThinking(true);
+  setTimeout(() => {
+    ivThinking(false);
+    const desk = deskForKind(text);
+    const draft = draftForKind(sc, text);
+    ivAppend('fren', draft + ' I’ve added it to the Human Queue — open it there to approve.');
+    const n = (REPORT.snapshot.human_queue||[]).filter(i => i.type==='INTERVENTION').length + 1;
+    const item = {
+      workflow_task_id: 'WF-IV-'+n, type:'INTERVENTION',
+      source_run: sc.id, source_title: sc.title, kind: text, request: text,
+      drafted_message: draft, summary: 'Human-requested change to '+sc.title,
+      assigned_to: desk, status:'pending_approval', priority:'standard',
+      _origin:'human', ts: new Date().toISOString()
+    };
+    (REPORT.snapshot.human_queue = REPORT.snapshot.human_queue || []).push(item);
+    appendTraceStage(sc, item);
+    sc._reopened = true;
+    markReopened();
+    refreshBadges();
+    toast('Proposal added to the Human Queue · linked to this run.');
+  }, 800);
+}
+function appendTraceStage(sc, item) {
+  const stage = { agent:'Human · Intervention', steps:[
+    {label:'Requested', tool:null, detail:item.request},
+    {label:'Drafted by agent', tool:'draft', detail:item.summary},
+    {label:'Queued for approval', tool:null, detail:item.workflow_task_id}
+  ]};
+  (sc.stages = sc.stages || []).push(stage);
+  const thread = qs('.rv-thread');
+  if(thread) thread.appendChild(buildTraceStage(stage));
+}
+function markReopened() {
+  const title = qs('.rv-htitle');
+  if(title && !title.querySelector('.rv-reopened')) title.appendChild(txt('span','rv-reopened','⟲ reopened'));
 }
 const NOTES = {};   // workflow_task_id -> operator note (session only)
 function renderCopilot(item, main) {
