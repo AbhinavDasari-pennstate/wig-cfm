@@ -570,16 +570,46 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 @media (max-width: 768px){
   html,body{overflow:auto;}
   .app{display:block;height:auto;}
-  .topbar{position:sticky;top:0;}
+  .topbar{position:sticky;top:0;padding:0 12px;}
+  .tb-brand{min-width:0;padding-right:12px;}
   .tb-search{margin:0 12px;}
+  .tb-right{gap:12px;}
+  .tb-time{display:none;}
+  .nav-toggle{display:none;}
   .sidebar{display:flex;flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);}
   .sidebar .sb-footer{display:none;}
-  .main{min-height:60vh;}
+  .main{min-height:60vh;overflow-x:visible;}
   .trend-row{grid-template-columns:1fr;}
   .kpi-row{grid-template-columns:repeat(2,1fr);}
   .cp{display:block;height:auto;}
   .cp .col,.cp .col-fren{position:static;transform:none;width:auto;max-width:none;border-left:0;border-top:1px solid var(--line);box-shadow:none;}
   .fren-dock{right:0;left:0;bottom:0;width:auto;border-radius:16px 16px 0 0;height:70vh;}
+  /* run view stacks */
+  .rv{height:auto;overflow:visible;}
+  .rv-head{height:auto;flex-wrap:wrap;padding:9px 14px;gap:8px;}
+  .rv-name{max-width:60vw;}
+  .rv-grid,.rv.fren-open .rv-grid{grid-template-columns:1fr;overflow:visible;}
+  .rv-trace{border-right:0;border-bottom:1px solid var(--line);}
+  .rv-trace,.rv-art,.rv-fren{padding:16px 16px 30px;}
+  .rv-fren{border-left:0;border-top:1px solid var(--line);}
+}
+@media (max-width: 560px){
+  .topbar{height:48px;}
+  .tb-search,.tb-badge{display:none;}
+  .tb-user > div:nth-child(2){display:none;}
+  .tb-wordmark{font-size:13.5px;}
+  .sec-head{padding:14px 14px 12px;}
+  .sec-body{padding:14px 14px 32px;}
+  .filter-tabs{padding:12px 14px 0;overflow-x:auto;}
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .hero-tiles{grid-template-columns:1fr;}
+  /* tables scroll horizontally instead of clipping */
+  .brand-table,.cl-list,.data-list{overflow-x:auto;}
+  .bt-head,.bt-row{min-width:440px;}
+  .cl-th,.cl-row{min-width:560px;}
+  .cl-kpis{grid-template-columns:1fr;}
+  .rv-name{max-width:48vw;}
+  .rv-step-lbl{width:92px;}
 }
 /* ── USER MENU ── */
 .user-pop{position:absolute;top:38px;right:0;width:230px;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--sh2);z-index:300;overflow:hidden;padding:4px 0;}
