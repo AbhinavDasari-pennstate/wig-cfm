@@ -1,0 +1,66 @@
+import { useState } from 'react';
+import { useApp } from '../App.jsx';
+import { getAlerts } from '../lib/data.js';
+
+export default function Quality() {
+  const { report, sel, selectItem } = useApp();
+  const [filter, setFilter] = useState('all');
+  const alerts = getAlerts(report);
+  const qAlerts = report.snapshot.quality_alerts || [];
+
+  const tabs = [
+    { key: 'all', label: 'All', n: alerts.length },
+    { key: 'velocity_spike', label: 'Velocity Spike', n: alerts.filter((a) => a.type === 'velocity_spike').length },
+    { key: 'volume_threshold', label: 'Volume Threshold', n: alerts.filter((a) => a.type === 'volume_threshold').length },
+  ];
+  const filtered = filter === 'all' ? alerts : alerts.filter((a) => a.type === filter);
+
+  return (
+    <div>
+      <div className="sec-head">
+        <div className="sec-crumb">Quality Intelligence · Agent 3</div>
+        <div className="sec-title">Quality Alerts</div>
+        <div className="sec-sub">Daily scan · {alerts.length} velocity alert{alerts.length !== 1 ? 's' : ''} · {qAlerts.length} total alert{qAlerts.length !== 1 ? 's' : ''} raised{qAlerts.length ? ' · Last scan: 06:00 GST' : ''}</div>
+      </div>
+
+      <div className="filter-tabs">
+        {tabs.map((t) => (
+          <div key={t.key} className={'ftab' + (filter === t.key ? ' active' : '')} onClick={() => setFilter(t.key)}>
+            {t.label}<span className="cnt">{t.n}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="sec-body section-animate">
+        {filtered.length === 0 ? (
+          <div>No alerts matching this filter.</div>
+        ) : (
+          filtered.map((alert) => {
+            const isNew = alert.velocity_pct == null;
+            const active = sel && sel.type === 'alert' && sel.data.alert_id === alert.alert_id;
+            return (
+              <div
+                key={alert.alert_id}
+                className={'alert-card' + (isNew ? ' blood' : '') + (active ? ' active' : '')}
+                onClick={() => selectItem('alert', alert)}
+              >
+                <div className="ac-top">
+                  <span className={'badge ' + (isNew ? 'blood' : 'brass')}>{isNew ? 'NEW SKU' : 'VELOCITY SPIKE'}</span>
+                  <span style={{ fontSize: '12.5px', fontWeight: 600 }}>{alert.brand} · <span className="mono">{alert.sku || alert.product_sku}</span>{alert.category ? ' · ' + alert.category : ''}</span>
+                </div>
+                <div className="ac-grid">
+                  <div className="ac-stat"><div className="k">Prior 3d</div><div className="v">{alert.prior ?? 0}</div></div>
+                  <div className="ac-stat"><div className="k">Recent 3d</div><div className="v" style={{ color: 'var(--blood)' }}>{alert.recent ?? alert.ticket_count ?? '—'}</div></div>
+                  <div className="ac-stat"><div className="k">Change</div><div className="v" style={{ color: 'var(--blood)' }}>{alert.velocity_pct != null ? '+' + alert.velocity_pct + '%' : '∞'}</div></div>
+                  <div className="ac-stat"><div className="k">Total (7d)</div><div className="v">{alert.total ?? alert.ticket_count ?? '—'}</div></div>
+                  <div className="ac-stat"><div className="k">Vol-15</div><div className="v" style={{ color: 'var(--faint)', fontSize: '12px' }}>UNDER</div></div>
+                </div>
+                {alert.description && <div className="ac-desc">"{alert.description}"</div>}
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

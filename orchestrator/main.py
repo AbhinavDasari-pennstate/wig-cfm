@@ -24,11 +24,13 @@ from demo.runner import build_report
 from models.feedback_ticket import Brand, FeedbackChannel, FeedbackTicket, Language
 
 app = FastAPI(title="WIG Customer Feedback Intelligence — Demo")
-WEB = Path(__file__).resolve().parent.parent / "web"
+# The dashboard is the built React app (web-react/dist). dist/ is committed so the
+# host serves it directly — there is no Node build step at deploy time.
+DIST = Path(__file__).resolve().parent.parent / "web-react" / "dist"
 
-# Static assets (self-hosted editorial fonts) — keeps the dashboard offline and
-# its single index.html lean. Not an API surface; serves files only.
-app.mount("/assets", StaticFiles(directory=WEB), name="assets")
+# Vite emits hashed JS/CSS plus the self-hosted editorial fonts under dist/assets,
+# all referenced from index.html as /assets/*. Not an API surface; serves files only.
+app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
 # App-level backend for live ingestion (the dashboard uses a fresh one per call).
 _BACKEND = DemoBackend()
@@ -131,4 +133,4 @@ async def fulfillment_confirmed(payload: dict) -> dict:
 
 @app.get("/")
 async def index() -> FileResponse:
-    return FileResponse(WEB / "index.html")
+    return FileResponse(DIST / "index.html")

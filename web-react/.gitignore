@@ -1,0 +1,3 @@
+node_modules
+*.log
+# dist/ is committed on purpose: Render serves it via FastAPI (no Node build step).
