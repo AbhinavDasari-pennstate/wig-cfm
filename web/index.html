@@ -1789,6 +1789,7 @@ function markReopened() {
 }
 const NOTES = {};   // workflow_task_id -> operator note (session only)
 function renderCopilot(item, main) {
+  if(item.type === 'INTERVENTION') { renderInterventionCopilot(item, main); return; }
   const isProc = item.type === 'PROCUREMENT_APPROVAL';
   const isHigh = item.priority && item.priority.toString().toUpperCase().startsWith('HIGH');
   const name = isProc ? (SKU_NAMES[item.sku]||item.sku) : (item.product||'Warranty Claim');
@@ -2121,6 +2122,110 @@ function showConfirmModal(item, isProc) {
     refreshBadges();
     document.querySelectorAll('.cp-actions .cpb.primary, .doc-foot .foot-btn').forEach(sub => { sub.textContent = '✓ ' + item._actionLabel; sub.style.opacity = '.7'; sub.onclick = null; });
     appendFrenMsg('fren', `Done — ${item.workflow_task_id||'this item'} has been forwarded to ${desk}. They will review and action it. It is marked ${item._actionLabel.toLowerCase()} in the queue.`);
+  };
+  overlay.onclick = e => { if(e.target === overlay) overlay.remove(); };
+}
+function renderInterventionCopilot(item, main) {
+  FREN_HIST = [];
+  const cp = el('div','cp');
+
+  const ch = el('div','cp-head');
+  const back = el('span','cp-back','◁ Queue'); back.onclick = closeCopilot;
+  const crumb = el('div','cp-crumb');
+  crumb.innerHTML = `<span>Queue</span><span class="sep">›</span><span>${item.workflow_task_id}</span><span class="sep">›</span><span class="cur">Intervention · Review</span>`;
+  const actions = el('div','cp-actions');
+  const openRunBtn = el('div','cpb','◷ Open source run');
+  const goRun = () => { const sc = (REPORT.scenarios||[]).find(s => s.id===item.source_run); if(sc){ closeCopilot(); openRunView(sc); } };
+  openRunBtn.onclick = goRun;
+  const submitBtn = el('div','cpb primary','Apply / Release →');
+  submitBtn.onclick = () => showInterventionConfirm(item);
+  actions.append(openRunBtn, submitBtn);
+  ch.append(back, crumb, actions);
+  cp.appendChild(ch);
+
+  // ── ctx column
+  const ctx = el('div','col col-ctx');
+  ctx.appendChild(txt('div','ck','↩ Source run'));
+  const srcCard = el('div','ctx-card');
+  srcCard.innerHTML = `<div class="ctx-title">Reopened run</div><div class="kv"><span class="k">Run</span><span class="v">${item.source_title}</span></div><div class="kv"><span class="k">Assigned</span><span class="v">${item.assigned_to}</span></div>`;
+  const openLink = txt('div','prec','◷ open run'); openLink.style.cursor='pointer'; openLink.onclick = goRun;
+  srcCard.appendChild(openLink);
+  ctx.appendChild(srcCard);
+
+  ctx.appendChild(txt('div','ck','◷ What happened'));
+  const tlCard = el('div','ctx-card');
+  const tl = el('div','tl');
+  [{what:'Human intervened',agent:item.kind},{what:'Agent drafted change',agent:'no message sent'},{what:'Awaiting approval',agent:'nothing dispatched yet',now:true}].forEach(s => {
+    const step = el('div','tl-step'+(s.now?' now':''));
+    step.innerHTML = `<div class="tl-when">now</div><div class="tl-what">${s.what}</div><div class="tl-agent">${s.agent}</div>`;
+    tl.appendChild(step);
+  });
+  tlCard.appendChild(tl); ctx.appendChild(tlCard);
+
+  ctx.appendChild(txt('div','ck','✎ Your request'));
+  const rq = el('div','ctx-card'); rq.innerHTML = `<div class="reply" style="font-size:13px">${item.request}</div>`;
+  ctx.appendChild(rq);
+  cp.appendChild(ctx);
+
+  // ── doc column
+  const doc = el('div','col col-doc');
+  const dhead = el('div','doc-head');
+  dhead.innerHTML = `<div class="doc-pl"><span class="dot"></span> Human intervention · ${item.kind} <span class="doc-status">Drafted</span></div>`;
+  doc.appendChild(dhead);
+  const scroll = el('div','doc-scroll'); const body = el('div','doc-body');
+  const sec = el('div','doc-sec');
+  sec.innerHTML = `<div class="doc-sec-t">Drafted change · ${item.workflow_task_id}</div>`;
+  const msg = item.drafted_message||'—';
+  const isAr = /[؀-ۿ]/.test(msg);
+  const rep = el('div','reply'); if(isAr){ rep.dir='rtl'; rep.style.fontFamily='var(--ar)'; } rep.textContent = msg;
+  sec.appendChild(rep); body.appendChild(sec);
+  const flowSec = el('div','doc-sec');
+  flowSec.innerHTML = `<div class="doc-sec-t">On apply · what happens next</div><div class="flow"><div class="flow-step"><div class="n">1 · Desk</div><div class="ft">${item.assigned_to} reviews</div><div class="fs">a person actions the change</div></div><div class="flow-step"><div class="n">2 · Run</div><div class="ft">Linked run updated</div><div class="fs">intervention recorded on the trace</div></div><div class="flow-step"><div class="n">3 · SAP</div><div class="ft">Outcome written back</div><div class="fs">agents record — never own the data</div></div></div>`;
+  body.appendChild(flowSec);
+  scroll.appendChild(body); doc.appendChild(scroll);
+  const foot = el('div','doc-foot');
+  const note = txt('span','fnote', `Applying notifies ${item.assigned_to}. You're proposing — not transacting.`);
+  const fbtn = el('button','foot-btn','Apply / Release →'); fbtn.onclick = () => showInterventionConfirm(item);
+  foot.append(note, fbtn); doc.appendChild(foot);
+  cp.appendChild(doc);
+
+  // ── fren column (teal co-solver)
+  const fcol = el('div','col col-fren');
+  const fhead = el('div','fren-head');
+  fhead.innerHTML = `<div class="fren-avatar">f</div><div><div class="fren-name">fren <span class="sub">· Co-solver</span></div></div><div class="fren-live"><span class="d"></span> Live</div>`;
+  fcol.appendChild(fhead);
+  const fctx = el('div','fren-ctx');
+  fctx.innerHTML = [item.workflow_task_id, 'intervention', item.assigned_to].map(c=>`<span class="ctxchip">${c}</span>`).join('');
+  fcol.appendChild(fctx);
+  const fmsgs = el('div','fren-msgs'); fmsgs.id='fren-msgs'; fcol.appendChild(fmsgs);
+  const fchips = el('div','fchips'); fchips.appendChild(txt('div','fchips-label','Suggested')); const fInner = el('div'); fInner.id='fren-chips'; fchips.appendChild(fInner); fcol.appendChild(fchips);
+  const fiw = el('div','finput'); const finp = el('textarea','fren-input'); finp.id='fren-input'; finp.placeholder='Ask fren anything…'; finp.rows=1; const fsend = el('button','fsend','→'); fsend.onclick = sendFrenMsg; fiw.append(finp,fsend); fcol.appendChild(fiw);
+  cp.appendChild(fcol);
+
+  main.innerHTML=''; main.appendChild(cp);
+
+  FREN_CHIPS = [
+    {q:'Is this safe to apply?', a:'Yes — applying only notifies '+item.assigned_to+' to action your requested change. No purchase, dispatch, or customer message is sent automatically. A person signs off.'},
+    {q:'What did the human ask for?', a:'The request was: "'+item.request+'". I drafted a proposal for the desk to review.'},
+    {q:'Will the customer be re-contacted?', a:'Not automatically. Any new customer message would itself be drafted and approved before sending — propose, don’t transact.'}
+  ];
+  if(!FREN_HIST.length) setTimeout(() => appendFrenMsg('fren', 'This is a human-requested change to "'+item.source_title+'". Review the draft on the left; Apply routes it to '+item.assigned_to+' for sign-off.'), 400);
+  renderFrenChips();
+  const fi = qs('#fren-input');
+  if(fi) fi.addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendFrenMsg(); } });
+}
+function showInterventionConfirm(item) {
+  const overlay = el('div','cp-modal-overlay');
+  const modal = el('div','cp-modal');
+  modal.innerHTML = `<h3>Apply intervention</h3><p>This will notify <strong>${item.assigned_to}</strong> to action ${item.workflow_task_id}. You are <strong>proposing</strong> — not transacting. A person at the desk makes the final decision.</p><div class="cp-modal-btns"><button class="cp-modal-btn cancel">Cancel</button><button class="cp-modal-btn confirm">Confirm →</button></div>`;
+  overlay.appendChild(modal); document.body.appendChild(overlay);
+  modal.querySelector('.cancel').onclick = () => overlay.remove();
+  modal.querySelector('.confirm').onclick = () => {
+    overlay.remove();
+    item._actioned = true; item._actionLabel = 'Applied';
+    refreshBadges();
+    document.querySelectorAll('.cp-actions .cpb.primary, .doc-foot .foot-btn').forEach(b => { b.textContent='✓ Applied'; b.style.opacity='.7'; b.onclick=null; });
+    appendFrenMsg('fren', 'Done — '+item.workflow_task_id+' has been released to '+item.assigned_to+'. They will review and action it. It is marked applied in the queue.');
   };
   overlay.onclick = e => { if(e.target === overlay) overlay.remove(); };
 }
