@@ -35,9 +35,15 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");}
 
 /* ── APP GRID ── */
-.app{display:grid;grid-template-columns:220px 1fr 320px;grid-template-rows:52px calc(100vh - 52px);height:100vh;overflow:hidden;}
+.app{display:grid;grid-template-columns:220px 1fr 320px;grid-template-rows:52px calc(100vh - 52px);height:100vh;overflow:hidden;transition:grid-template-columns .26s cubic-bezier(.4,0,.2,1);}
 .app.copilot{grid-template-columns:1fr;}
 .app.copilot .rail,.app.copilot .sidebar{display:none;}
+.app.nav-collapsed{grid-template-columns:0 1fr 320px;}
+.app.nav-collapsed .sidebar{border-right:0;opacity:0;}
+.sidebar{overflow-x:hidden;transition:opacity .18s ease;}
+.nav-toggle{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:rgba(255,255,255,.72);cursor:pointer;margin-right:14px;flex:none;transition:background .12s;}
+.nav-toggle:hover{background:rgba(255,255,255,.14);color:#fff;}
+.nav-toggle svg{width:15px;height:15px;}
 
 /* ── TOPBAR ── */
 .topbar{grid-column:1/-1;grid-row:1;background:var(--ink);display:flex;align-items:center;gap:0;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06);z-index:100;}
@@ -571,6 +577,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 <div class="grain"></div>
 <div class="app" id="app">
   <header class="topbar">
+    <button class="nav-toggle" id="nav-toggle" title="Toggle navigation (⌘B)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M2 4h12M2 8h12M2 12h12"/></svg></button>
     <div class="tb-brand">
       <div class="tb-live-dot"></div>
       <div>
@@ -760,6 +767,17 @@ async function boot() {
   initSearch();
   initBell();
   mountFren();
+  initNavToggle();
+}
+
+/* ─────────────── NAV TOGGLE ─────────────── */
+function initNavToggle() {
+  const btn = qs('#nav-toggle');
+  const toggle = () => { if(!COPILOT) qs('#app').classList.toggle('nav-collapsed'); };
+  if(btn) btn.onclick = toggle;
+  document.addEventListener('keydown', e => {
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='b') { e.preventDefault(); toggle(); }
+  });
 }
 
 /* ─────────────── GLOBAL FREN ─────────────── */
