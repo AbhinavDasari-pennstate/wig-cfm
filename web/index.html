@@ -36,7 +36,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 
 /* ── APP GRID ── */
 .app{display:grid;grid-template-columns:220px 1fr 320px;grid-template-rows:52px calc(100vh - 52px);height:100vh;overflow:hidden;transition:grid-template-columns .26s cubic-bezier(.4,0,.2,1);}
-.app.copilot{grid-template-columns:1fr;}
+.app.copilot,.app.copilot.nav-collapsed{grid-template-columns:1fr;}
 .app.copilot .rail,.app.copilot .sidebar{display:none;}
 .app.nav-collapsed{grid-template-columns:60px 1fr 320px;}
 .sidebar{overflow-x:hidden;}
