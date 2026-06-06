@@ -421,6 +421,26 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 .fren-dock-close{margin-left:8px;cursor:pointer;color:var(--dim);font-size:20px;line-height:1;padding:2px 4px;border-radius:6px;}
 .fren-dock-close:hover{background:rgba(0,0,0,.06);color:var(--ink);}
 
+/* ── CLOSED LOOP ── */
+.cl-kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:22px;box-shadow:var(--sh1);background:var(--card);}
+.cl-kpi{padding:16px 18px;border-right:1px solid var(--line);}
+.cl-kpi:last-child{border-right:0;}
+.cl-kpi .k{font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);margin-bottom:7px;}
+.cl-kpi .v{font-family:var(--serif);font-size:30px;font-weight:600;}
+.cl-kpi .s{font-size:11px;color:var(--dim);margin-top:5px;}
+.cl-list{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);box-shadow:var(--sh1);}
+.cl-th{display:grid;grid-template-columns:1.6fr 90px 70px 70px 70px 120px;padding:10px 18px;border-bottom:1px solid var(--line);background:var(--card2);}
+.cl-th span{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);}
+.cl-row{display:grid;grid-template-columns:1.6fr 90px 70px 70px 70px 120px;padding:13px 18px;border-bottom:1px solid var(--line);align-items:center;cursor:pointer;transition:background .12s;border-left:3px solid transparent;}
+.cl-row:last-child{border-bottom:0;}
+.cl-row:hover{background:var(--paper);}
+.cl-row.active{background:var(--teal-soft);border-left-color:var(--teal);}
+.cl-case{font-weight:600;font-size:13px;}
+.cl-case .sub{font-size:11px;color:var(--faint);font-weight:400;display:block;margin-top:1px;}
+.cl-v{font-family:var(--serif);font-size:16px;font-weight:600;}
+.cl-sap{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;color:var(--teal-ink);background:var(--teal-soft);border:1px solid #C8DDD9;border-radius:6px;padding:3px 9px;font-weight:600;width:max-content;}
+.cl-note{font-size:10.5px;color:var(--faint);font-style:italic;margin-top:14px;text-align:center;}
+
 /* ── QUEUE STATUS ── */
 .dr-row-done{opacity:.6;}
 .badge.done{background:var(--teal-soft);color:var(--teal-ink);border:1px solid #C8DDD9;}
@@ -489,6 +509,7 @@ const NAV_ITEMS = [
   {key:'queue',    label:'Human Queue',     dot:'#B8893B', badge:'queue'},
   {key:'runs',     label:'Agent Runs',      dot:'#0E6E64', badge:null},
   {key:'guardrails',label:'Guardrails',     dot:'#0E6E64', badge:null},
+  {key:'loop',     label:'Closed Loop',     dot:'#1F7A5A', badge:null},
 ];
 const RUN_TIMES = ['06:00','06:14','06:15','06:15','06:16','06:17'];
 const OUTCOMES = {
@@ -921,7 +942,7 @@ function render(key) {
   if(typeof updateFrenFab === 'function') updateFrenFab();
   if(GFREN_OPEN) gRenderChips();
   if(COPILOT) { renderCopilot(COPILOT, main); return; }
-  ({overview:viewOverview, quality:viewQuality, queue:viewQueue, runs:viewRuns, guardrails:viewGuardrails}[key] || viewOverview)(main);
+  ({overview:viewOverview, quality:viewQuality, queue:viewQueue, runs:viewRuns, guardrails:viewGuardrails, loop:viewLoop}[key] || viewOverview)(main);
   renderRail();
 }
 
@@ -1694,13 +1715,72 @@ function viewGuardrails(main) {
 }
 
 /* ─────────────── RIGHT RAIL ─────────────── */
+/* ─────────────── CLOSED LOOP ─────────────── */
+function viewLoop(main) {
+  const rows = REPORT.closed_loop || [];
+  const w = el('div');
+  const head = el('div','sec-head');
+  head.innerHTML = `<div class="sec-crumb">Resolution · Written back to SAP</div><div class="sec-title">Closed Loop</div><div class="sec-sub">Resolved cases with CSAT / NPS / CES written back to SAP — agents propose and record; they are not the system of record.</div>`;
+  w.appendChild(head);
+  const body = el('div','sec-body section-animate');
+
+  if(!rows.length) {
+    body.innerHTML = '<div class="rail-empty" style="height:40vh"><div class="re-icon">◷</div><div class="re-title">No closed loops yet</div><div class="re-sub">Resolutions appear here once agents write scores back to SAP.</div></div>';
+    w.appendChild(body); main.innerHTML=''; main.appendChild(w); return;
+  }
+
+  const csats = rows.map(r=>r.csat).filter(v=>v!=null);
+  const avg = csats.length ? (csats.reduce((a,b)=>a+b,0)/csats.length).toFixed(1) : '—';
+  const kpis = el('div','cl-kpis');
+  kpis.innerHTML = `
+    <div class="cl-kpi"><div class="k">Loops closed</div><div class="v">${rows.length}</div><div class="s">surveys + scores written to SAP</div></div>
+    <div class="cl-kpi"><div class="k">Avg resolution CSAT</div><div class="v ${csatClass(parseFloat(avg)||0)}">${avg}</div><div class="s">across closed cases</div></div>
+    <div class="cl-kpi"><div class="k">System of record</div><div class="v">SAP</div><div class="s">agents record, never own the data</div></div>`;
+  body.appendChild(kpis);
+
+  const list = el('div','cl-list');
+  const th = el('div','cl-th');
+  th.innerHTML = '<span>Case</span><span>Channel</span><span>CSAT</span><span>NPS</span><span>CES</span><span>SAP write-back</span>';
+  list.appendChild(th);
+  rows.forEach(r => {
+    const name = SKU_NAMES[r.product] || r.product;
+    const row = el('div','cl-row'+(SEL&&SEL.type==='loop'&&SEL.data.sap_ticket_id===r.sap_ticket_id?' active':''));
+    row.innerHTML = `
+      <div class="cl-case">${name}<span class="sub">${r.brand} · ${r.category}</span></div>
+      <span class="badge neutral">${channelLabel(r.channel)}</span>
+      <span class="cl-v ${r.csat!=null?csatClass(r.csat):''}">${r.csat??'—'}</span>
+      <span class="cl-v ${r.nps!=null?npsClass(r.nps):''}">${r.nps!=null?fmtNPS(r.nps):'—'}</span>
+      <span class="cl-v ${r.ces!=null?csatClass(r.ces):''}">${r.ces??'—'}</span>
+      <span class="cl-sap">✓ ${r.sap_ticket_id||'SAP'}</span>`;
+    row.onclick = () => selectItem('loop', r, row);
+    list.appendChild(row);
+  });
+  body.appendChild(list);
+  body.appendChild(txt('div','cl-note','Every row is a resolution the agents recorded in SAP. No purchase, dispatch, or courier action was taken by an agent.'));
+  w.appendChild(body);
+  main.innerHTML=''; main.appendChild(w);
+}
+
 function renderRail() {
   const rail = qs('#rail');
   if(!SEL) { railEmpty(rail); return; }
   if(SEL.type === 'brand') railBrand(rail, SEL.data);
   else if(SEL.type === 'alert') railAlert(rail, SEL.data);
   else if(SEL.type === 'run') railRun(rail, SEL.data);
+  else if(SEL.type === 'loop') railLoop(rail, SEL.data);
   else railEmpty(rail);
+}
+function railLoop(rail, r) {
+  rail.innerHTML = `
+    <div class="rail-head"><div class="rail-crumb">Closed Loop</div><div class="rail-title">${SKU_NAMES[r.product]||r.product}</div><div class="rail-sub">${r.brand} · ${r.category}</div></div>
+    <div class="rail-body">
+      <div class="rail-section"><div class="rail-section-k">Resolution scores</div>
+        <div class="stat-pair"><div class="stat-box"><div class="k">CSAT</div><div class="v ${r.csat!=null?csatClass(r.csat):''}">${r.csat??'—'}</div></div><div class="stat-box"><div class="k">NPS</div><div class="v ${r.nps!=null?npsClass(r.nps):''}">${r.nps!=null?fmtNPS(r.nps):'—'}</div></div></div>
+        <div class="stat-pair"><div class="stat-box"><div class="k">CES</div><div class="v">${r.ces??'—'}</div></div><div class="stat-box"><div class="k">Channel</div><div class="v" style="font-size:14px">${channelLabel(r.channel)}</div></div></div>
+      </div>
+      <div class="rail-section"><div class="rail-section-k">SAP write-back</div><div class="rail-kv"><span class="k">Ticket</span><span class="v mono">${r.sap_ticket_id||'—'}</span></div><div class="rail-kv"><span class="k">Language</span><span class="v">${langLabel(r.language)}</span></div></div>
+      ${r.notes?`<div class="rail-section"><div class="rail-section-k">Resolution notes</div><div class="doc-rec">${r.notes}</div></div>`:''}
+    </div>`;
 }
 function railEmpty(rail) {
   rail.innerHTML = '';
