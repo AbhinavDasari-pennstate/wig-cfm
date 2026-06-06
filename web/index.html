@@ -1190,7 +1190,7 @@ function viewOverview(main) {
       <div class="bt-val ${csatClass(m.csat)}">${fmtCSAT(m.csat)}</div>
       <div class="bt-val ${npsClass(m.nps)}">${fmtNPS(m.nps)}</div>
       <div class="bt-val ${csatClass(m.ces)}">${fmtCSAT(m.ces)}</div>
-      <div class="bt-trend"><span class="arrow ${tr.cls}" style="font-weight:700">${tr.sym}</span><span style="font-size:11px;color:var(--faint);margin-left:3px">${tr.note}</span></div>
+      <div class="bt-trend"><span class="arrow" style="font-weight:700;color:var(--faint)">${tr.sym}</span><span style="font-size:11px;color:var(--faint);margin-left:3px">${tr.note}</span></div>
     `;
     row.onclick = () => selectItem('brand', {name, m, p}, row);
     btWrap.appendChild(row);
