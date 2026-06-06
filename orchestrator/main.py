@@ -53,9 +53,17 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
+_REPORT_CACHE: dict | None = None
+
+
 @app.get("/api/demo")
-async def api_demo() -> JSONResponse:
-    return JSONResponse(await build_report())
+async def api_demo(refresh: bool = False) -> JSONResponse:
+    """Serve the report from memory. It is deterministic, so build once and cache;
+    pass ?refresh=1 to rebuild (e.g. to re-anchor relative timestamps)."""
+    global _REPORT_CACHE
+    if _REPORT_CACHE is None or refresh:
+        _REPORT_CACHE = await build_report()
+    return JSONResponse(_REPORT_CACHE)
 
 
 @app.post("/feedback/email")

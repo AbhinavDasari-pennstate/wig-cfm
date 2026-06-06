@@ -263,9 +263,10 @@ class DemoBackend:
                 self.corpus.append({
                     "brand": brand, "product_sku": f"{brand[:2]}-{1000 + (i % 4)}",
                     "category": cats[i % len(cats)], "region": p["region"],
-                    # Days 4–6: safely inside the 7-day digest window, outside the
-                    # 3-day "recent" window, so base tickets never trip velocity.
-                    "created_at": _days_ago(4 + (i % 3)), "resolved": True,
+                    # Spread evenly across the 7-day window so the daily trend is
+                    # meaningful. recent ≈ prior per group, so base never trips a
+                    # velocity spike (only the GK-NEW/KT-IRON21 clusters do).
+                    "created_at": _days_ago(0.5 + (i % 7)), "resolved": True,
                     "csat_score": p["csat"][i % 7], "nps_score": p["nps"][i % 7],
                     "ces_score": p["ces"][i % 7], "store_name": f"{brand} Store",
                 })
@@ -310,7 +311,7 @@ class DemoBackend:
                 self.corpus.append({
                     "brand": brand, "product_sku": f"{brand[:2]}-{1000 + (i % 4)}",
                     "category": cats[i % len(cats)], "region": p["region"],
-                    "created_at": _days_ago(4 + (i % 3)), "resolved": True,
+                    "created_at": _days_ago(0.5 + (i % 7)), "resolved": True,
                     "csat_score": p["csat"][i % 7], "nps_score": p["nps"][i % 7],
                     "ces_score": p["ces"][i % 7], "store_name": f"{brand} Store",
                 })
