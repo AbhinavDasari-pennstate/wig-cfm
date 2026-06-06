@@ -361,6 +361,70 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 .cp-modal-btn.cancel{background:var(--card);color:var(--dim);}
 .cp-modal-btn.confirm{background:var(--teal);color:#fff;border-color:var(--teal);}
 
+/* ── TREND + CHANNEL ── */
+.trend-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:20px;}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh1);padding:16px 18px 14px;}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px;}
+.panel-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);}
+.panel-legend{display:flex;gap:12px;font-size:10.5px;color:var(--dim);}
+.panel-legend .lg{display:flex;align-items:center;gap:5px;}
+.panel-legend .sw{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.panel-legend .sw.line{height:2px;border-radius:2px;}
+.spark{width:100%;height:96px;display:block;overflow:visible;}
+.spark .gl{stroke:var(--line);stroke-width:1;}
+.spark-x{display:flex;justify-content:space-between;margin-top:4px;}
+.spark-x span{font-size:9.5px;color:var(--faint);font-family:var(--mono);}
+.chan-list{display:flex;flex-direction:column;gap:11px;}
+.chan-item{display:grid;grid-template-columns:78px 1fr 34px;gap:10px;align-items:center;}
+.chan-name{font-size:11.5px;color:var(--ink2);font-weight:500;}
+.chan-track{height:8px;background:var(--paper2);border-radius:999px;overflow:hidden;}
+.chan-fill{height:100%;border-radius:999px;background:var(--teal);}
+.chan-fill.c1{background:var(--teal);} .chan-fill.c2{background:var(--brass);}
+.chan-fill.c3{background:#5B7A8A;} .chan-fill.c4{background:#8A6BB0;}
+.chan-val{font-size:11px;color:var(--dim);text-align:right;font-family:var(--mono);}
+
+/* ── SEARCH RESULTS ── */
+.tb-search{position:relative;}
+.search-pop{position:absolute;top:40px;left:0;right:0;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--sh2);z-index:300;max-height:340px;overflow-y:auto;padding:6px;}
+.sp-empty{padding:14px;font-size:12px;color:var(--faint);text-align:center;}
+.sp-group{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);padding:8px 10px 4px;}
+.sp-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:7px;cursor:pointer;}
+.sp-item:hover,.sp-item.sel{background:var(--paper2);}
+.sp-item .sp-t{font-size:12.5px;color:var(--ink);font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-item .sp-m{font-size:10.5px;color:var(--faint);}
+
+/* ── BELL DROPDOWN ── */
+.bell-pop{position:absolute;top:30px;right:-6px;width:300px;background:var(--card);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--sh2);z-index:300;overflow:hidden;}
+.bell-head{padding:11px 14px;border-bottom:1px solid var(--line);font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);background:var(--card2);}
+.bell-item{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer;}
+.bell-item:last-child{border-bottom:0;}
+.bell-item:hover{background:var(--paper);}
+.bell-dot2{width:7px;height:7px;border-radius:50%;flex:none;margin-top:4px;}
+.bell-t{font-size:12.5px;color:var(--ink);font-weight:500;line-height:1.35;}
+.bell-s{font-size:10.5px;color:var(--faint);margin-top:2px;}
+.bell-empty{padding:18px;font-size:12px;color:var(--faint);text-align:center;}
+
+/* ── SKELETON ── */
+.sk{padding:22px 26px;}
+.sk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.sk-box{background:var(--card);border:1px solid var(--line);border-radius:14px;height:96px;overflow:hidden;position:relative;}
+.sk-box.tall{height:320px;grid-column:1/-1;}
+.sk-box::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-100%);animation:shimmer 1.3s infinite;}
+@keyframes shimmer{100%{transform:translateX(100%);}}
+
+/* ── GLOBAL FREN DOCK ── */
+.fren-fab{position:fixed;right:22px;bottom:22px;z-index:400;display:flex;align-items:center;gap:9px;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:11px 17px 11px 12px;cursor:pointer;box-shadow:0 10px 28px -8px rgba(40,33,20,.45);font-family:var(--sans);font-size:13px;font-weight:600;transition:transform .12s,background .12s;}
+.fren-fab:hover{background:#000;transform:translateY(-1px);}
+.fren-fab .fab-av{width:26px;height:26px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:700;font-size:13px;color:#fff;}
+.fren-dock{position:fixed;right:22px;bottom:22px;z-index:401;width:374px;height:544px;max-height:calc(100vh - 76px);background:var(--card);border:1px solid var(--line2);border-radius:16px;box-shadow:0 26px 64px -12px rgba(40,33,20,.42);display:flex;flex-direction:column;overflow:hidden;}
+.fren-dock .fren-head{cursor:default;}
+.fren-dock-close{margin-left:8px;cursor:pointer;color:var(--dim);font-size:20px;line-height:1;padding:2px 4px;border-radius:6px;}
+.fren-dock-close:hover{background:rgba(0,0,0,.06);color:var(--ink);}
+
+/* ── QUEUE STATUS ── */
+.dr-row-done{opacity:.6;}
+.badge.done{background:var(--teal-soft);color:var(--teal-ink);border:1px solid #C8DDD9;}
+
 /* ── MOTION ── */
 @media(prefers-reduced-motion:no-preference){
   .fade-in{animation:fadeIn .3s ease both;}
@@ -387,12 +451,13 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
     </div>
     <div class="tb-search">
       <span class="tb-search-ic">⌕</span>
-      <input type="text" placeholder="Search feedback, brands, agents…" readonly/>
+      <input type="text" id="tb-search-input" placeholder="Search feedback, brands, agents…" autocomplete="off"/>
       <kbd class="tb-kbd">⌘K</kbd>
+      <div id="search-pop"></div>
     </div>
     <div class="tb-right">
       <div class="tb-badge"><span class="dot"></span>Live</div>
-      <div class="tb-bell">◉<span class="tb-bell-count" id="bell-count">3</span></div>
+      <div class="tb-bell" id="tb-bell" style="position:relative">◉<span class="tb-bell-count" id="bell-count">0</span></div>
       <div class="tb-user">
         <div class="tb-avatar">AA</div>
         <div><div class="tb-uname">Ahmed Al-Mansoori</div><div class="tb-urole">Dept Head · All Brands</div></div>
@@ -401,7 +466,7 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
     </div>
   </header>
   <aside class="sidebar" id="sidebar"></aside>
-  <main class="main" id="main"><div class="loading-state">Loading dashboard…</div></main>
+  <main class="main" id="main"><div class="sk"><div class="sk-row"><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div><div class="sk-box"></div></div><div class="sk-row"><div class="sk-box tall"></div></div></div></main>
   <aside class="rail" id="rail"></aside>
 </div>
 
@@ -563,6 +628,236 @@ async function boot() {
   ACTIVE = (location.hash || '#overview').slice(1);
   buildSidebar();
   render(ACTIVE);
+  initSearch();
+  initBell();
+  mountFren();
+}
+
+/* ─────────────── GLOBAL FREN ─────────────── */
+let GFREN_OPEN = false, GFREN_HIST = [], GFREN_GREETED = false;
+const GFREN_CHIPS = {
+  overview:   ['Summarise this week','Which brand needs attention?','What\'s the channel mix?'],
+  quality:    ['Explain the alerts','Why is KRYPTON down?','What\'s a velocity spike?'],
+  queue:      ['What\'s pending?','Any high priority?','What can I approve?'],
+  runs:       ['Summarise this week','Which brand needs attention?','How many runs today?'],
+  guardrails: ['What are the guardrails?','Anything contained?','Can agents place orders?'],
+};
+function mountFren() {
+  if(qs('.fren-fab') || qs('.fren-dock')) return;
+  const fab = el('button','fren-fab');
+  fab.id = 'fren-fab';
+  fab.innerHTML = '<span class="fab-av">f</span> Ask fren';
+  fab.onclick = () => toggleFren(true);
+  document.body.appendChild(fab);
+  updateFrenFab();
+}
+function updateFrenFab() {
+  const fab = qs('#fren-fab');
+  if(fab) fab.style.display = (COPILOT || GFREN_OPEN) ? 'none' : '';
+}
+function toggleFren(open) {
+  GFREN_OPEN = open;
+  let dock = qs('.fren-dock');
+  if(open) {
+    if(!dock) dock = buildFrenDock();
+    dock.style.display = 'flex';
+    if(!GFREN_GREETED) {
+      GFREN_GREETED = true;
+      setTimeout(() => gAppend('fren', "Hello — I'm fren, your co-solver. Ask me about any brand, the quality alerts, the approval queue, or the guardrails."), 250);
+    }
+    gRenderChips();
+    setTimeout(() => { const i = qs('#gfren-input'); if(i) i.focus(); }, 60);
+  } else if(dock) { dock.style.display = 'none'; }
+  updateFrenFab();
+}
+function buildFrenDock() {
+  const dock = el('div','fren-dock');
+  const head = el('div','fren-head');
+  head.innerHTML = `<div class="fren-avatar">f</div><div><div class="fren-name">fren <span class="sub">· Co-solver</span></div></div><div class="fren-live"><span class="d"></span> Live</div><span class="fren-dock-close" title="Close">×</span>`;
+  head.querySelector('.fren-dock-close').onclick = () => toggleFren(false);
+  dock.appendChild(head);
+  const msgs = el('div','fren-msgs'); msgs.id = 'gfren-msgs';
+  GFREN_HIST.forEach(m => { /* restore */ });
+  dock.appendChild(msgs);
+  const chips = el('div','fren-chips-wrap'); chips.id = 'gfren-chips';
+  dock.appendChild(chips);
+  const iw = el('div','fren-input-wrap');
+  const inp = el('textarea','fren-input'); inp.id = 'gfren-input'; inp.placeholder = 'Ask fren anything…'; inp.rows = 1;
+  const send = el('button','fren-send','→'); send.onclick = gSend;
+  inp.addEventListener('keydown', e => { if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); gSend(); } });
+  iw.append(inp, send);
+  dock.appendChild(iw);
+  document.body.appendChild(dock);
+  return dock;
+}
+function gAppend(role, text) {
+  GFREN_HIST.push({role, text});
+  const msgs = qs('#gfren-msgs'); if(!msgs) return;
+  const m = el('div','fren-msg '+(role==='fren'?'fren-side':'user-side'));
+  m.append(txt('div','fren-sender', role==='fren'?'fren · Co-solver':'You'), txt('div','fren-bubble', text));
+  msgs.appendChild(m); msgs.scrollTop = msgs.scrollHeight;
+}
+function gRenderChips() {
+  const wrap = qs('#gfren-chips'); if(!wrap) return;
+  wrap.innerHTML = '';
+  (GFREN_CHIPS[ACTIVE] || GFREN_CHIPS.overview).forEach(q => {
+    const c = txt('button','fren-chip', q);
+    c.onclick = () => gAsk(q);
+    wrap.appendChild(c);
+  });
+}
+function gSend() {
+  const inp = qs('#gfren-input'); if(!inp || !inp.value.trim()) return;
+  const t = inp.value.trim(); inp.value = ''; gAsk(t);
+}
+function gAsk(text) {
+  gAppend('user', text);
+  const wrap = qs('#gfren-chips'); if(wrap) wrap.innerHTML = '';
+  const msgs = qs('#gfren-msgs');
+  const think = el('div','fren-thinking'); think.id = 'gfren-think';
+  think.innerHTML = '<div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div>';
+  if(msgs){ msgs.appendChild(think); msgs.scrollTop = msgs.scrollHeight; }
+  const reply = gAnswer(text);
+  setTimeout(() => { const t2 = qs('#gfren-think'); if(t2) t2.remove(); gAppend('fren', reply); gRenderChips(); }, 750);
+}
+function gAnswer(q) {
+  const t = q.toLowerCase();
+  const bm = REPORT.brand_metrics || {}, pw = REPORT.prior_week_metrics || {};
+  const brands = Object.keys(bm);
+  const b = brands.find(x => t.includes(x.toLowerCase()));
+  if(b) {
+    const m = bm[b], p = pw[b];
+    let s = `${b}: CSAT ${m.csat}/5, NPS ${fmtNPS(m.nps)}, CES ${m.ces}/5 across ${m.tickets} tickets this week.`;
+    if(p) { const d = m.nps - p.nps; s += ` NPS is ${Math.abs(d)<1?'flat':(d>0?'up':'down')} vs last week (was ${fmtNPS(p.nps)}).`; }
+    return s;
+  }
+  if(/alert|velocity|quality|spike/.test(t)) {
+    const a = getAlerts();
+    if(!a.length) return 'No quality alerts right now.';
+    return `${a.length} velocity alert${a.length>1?'s':''}: ` + a.map(x => `${x.brand} ${x.sku||x.product_sku} (${x.velocity_pct==null?'new SKU':'+'+x.velocity_pct+'%'})`).join(', ') + '. Open Quality Alerts for the breakdown.';
+  }
+  if(/queue|approv|pending|sign.?off|action/.test(t)) {
+    const q2 = pendingQueue();
+    const hi = q2.filter(i => i.priority && i.priority.toString().toUpperCase().startsWith('HIGH')).length;
+    return `${q2.length} item${q2.length!==1?'s':''} awaiting approval${hi?`, ${hi} high priority`:''}. Every reply is already drafted — you approve, the agents don't transact.`;
+  }
+  if(/purchase order|\bpo\b|transact|spend|guardrail|safe|inject|manipulat/.test(t)) {
+    const ss = REPORT.safety_summary;
+    return `Guardrails: ${ss.purchase_orders_created} purchase orders auto-created, ${ss.transactional_tools_available} transactional tools wired, ${ss.manipulation_attempts_contained} manipulation attempt${ss.manipulation_attempts_contained!==1?'s':''} contained this session. Agents propose, never transact.`;
+  }
+  if(/channel/.test(t)) {
+    const mx = REPORT.channel_mix || {}; const tot = Object.values(mx).reduce((a,v)=>a+v,0)||1;
+    return 'Channel mix: ' + Object.entries(mx).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${channelLabel(k)} ${Math.round(v/tot*100)}%`).join(', ') + '.';
+  }
+  if(/worst|lowest|attention|risk|concern|problem|weak/.test(t)) {
+    if(!brands.length) return FALLBACK_FREN;
+    const r = brands.map(x => [x, bm[x].nps]).sort((a,b)=>a[1]-b[1])[0];
+    return `${r[0]} has the lowest NPS (${fmtNPS(r[1])}) — worth a look. The quality alerts explain most of the drop.`;
+  }
+  if(/best|top|strong|highest|leading/.test(t)) {
+    if(!brands.length) return FALLBACK_FREN;
+    const r = brands.map(x => [x, bm[x].nps]).sort((a,b)=>b[1]-a[1])[0];
+    return `${r[0]} leads on NPS (${fmtNPS(r[1])}).`;
+  }
+  if(/run|agent|scenario/.test(t)) {
+    const n = (REPORT.scenarios||[]).length;
+    return `${n} agent runs completed today across 5 agents, 0 failures. See Agent Runs for the per-run trace.`;
+  }
+  if(/csat|nps|ces|metric|overall|how are|summar|overview|week|doing/.test(t)) {
+    if(!brands.length) return FALLBACK_FREN;
+    const n = brands.length;
+    const ac = (brands.reduce((a,x)=>a+bm[x].csat,0)/n).toFixed(1);
+    const an = Math.round(brands.reduce((a,x)=>a+bm[x].nps,0)/n);
+    const tot = brands.reduce((a,x)=>a+bm[x].tickets,0);
+    return `Across ${n} brands: ${tot} tickets this week, avg CSAT ${ac}/5, avg NPS ${fmtNPS(an)}. ${getAlerts().length} quality alert(s) and ${pendingQueue().length} item(s) in the approval queue.`;
+  }
+  if(/who|what are you|help|hello|^hi|hey|thanks|thank you/.test(t)) {
+    return "I'm fren — your co-solver. Ask me about any brand's CSAT/NPS/CES, the quality alerts, the approval queue, channel mix, or the guardrails. Try 'how is KRYPTON' or 'what's in the queue'.";
+  }
+  return FALLBACK_FREN;
+}
+
+/* ─────────────── SEARCH ─────────────── */
+function buildSearchIndex() {
+  const idx = [];
+  Object.keys(REPORT.brand_metrics||{}).forEach(b =>
+    idx.push({group:'Brands', t:b, m:BRAND_REGIONS[b]||'', go:()=>setNav('overview')}));
+  getAlerts().forEach(a =>
+    idx.push({group:'Quality alerts', t:`${a.brand} · ${a.sku||a.product_sku}`, m:'velocity', go:()=>setNav('quality')}));
+  (REPORT.snapshot.human_queue||[]).forEach(item => {
+    const isProc = item.type==='PROCUREMENT_APPROVAL';
+    const name = isProc ? (SKU_NAMES[item.sku]||item.sku) : (item.product||'Warranty claim');
+    idx.push({group:'Human queue', t:name, m:item.workflow_task_id||'', go:()=>{ if(COPILOT) closeCopilot(); setNav('queue'); openCopilot(item); }});
+  });
+  (REPORT.scenarios||[]).forEach(sc =>
+    idx.push({group:'Agent runs', t:sc.title, m:(sc.channel||'').split(' ')[0], go:()=>{ setNav('runs'); selectItem('run', sc, null); }}));
+  return idx;
+}
+function initSearch() {
+  const inp = qs('#tb-search-input'), pop = qs('#search-pop');
+  if(!inp || !pop) return;
+  const index = buildSearchIndex();
+  const close = () => { pop.innerHTML=''; pop.style.display='none'; };
+  close();
+  const run = () => {
+    const q = inp.value.trim().toLowerCase();
+    if(!q) { close(); return; }
+    const hits = index.filter(x => (x.t+' '+x.m+' '+x.group).toLowerCase().includes(q)).slice(0,12);
+    pop.style.display='block';
+    if(!hits.length) { pop.innerHTML = '<div class="sp-empty">No matches</div>'; return; }
+    pop.innerHTML = '';
+    let lastGroup = null;
+    hits.forEach(h => {
+      if(h.group !== lastGroup) { pop.appendChild(txt('div','sp-group',h.group)); lastGroup = h.group; }
+      const it = el('div','sp-item');
+      it.innerHTML = `<span class="sp-t">${h.t}</span><span class="sp-m">${h.m||''}</span>`;
+      it.onclick = () => { close(); inp.value=''; inp.blur(); h.go(); };
+      pop.appendChild(it);
+    });
+  };
+  inp.addEventListener('input', run);
+  inp.addEventListener('focus', run);
+  document.addEventListener('keydown', e => {
+    if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k') { e.preventDefault(); inp.focus(); }
+    if(e.key==='Escape') { close(); inp.blur(); }
+  });
+  document.addEventListener('click', e => { if(!qs('.tb-search').contains(e.target)) close(); });
+}
+
+/* ─────────────── BELL ─────────────── */
+function notifications() {
+  const out = [];
+  getAlerts().forEach(a => out.push({
+    color:'var(--blood)', t:`Velocity alert: ${a.brand} ${a.sku||a.product_sku}`,
+    s:(a.velocity_pct==null?'new SKU':('+'+a.velocity_pct+'%'))+` · ${a.total||a.recent} tickets`,
+    go:()=>setNav('quality')}));
+  (REPORT.snapshot.human_queue||[]).filter(i=>!i._actioned && i.priority&&i.priority.toString().toUpperCase().startsWith('HIGH')).forEach(item => out.push({
+    color:'var(--brass)', t:`High-priority approval: ${item.product||item.sku}`,
+    s:(item.workflow_task_id||'')+' · awaiting sign-off',
+    go:()=>{ if(COPILOT) closeCopilot(); setNav('queue'); openCopilot(item); }}));
+  return out;
+}
+function initBell() {
+  const bell = qs('#tb-bell'), cnt = qs('#bell-count');
+  if(!bell) return;
+  const notes = notifications();
+  if(cnt) { cnt.textContent = notes.length; cnt.style.display = notes.length ? '' : 'none'; }
+  bell.onclick = e => {
+    e.stopPropagation();
+    const existing = qs('.bell-pop');
+    if(existing) { existing.remove(); return; }
+    const pop = el('div','bell-pop');
+    pop.innerHTML = `<div class="bell-head">Notifications · ${notes.length}</div>`;
+    if(!notes.length) pop.appendChild(txt('div','bell-empty','Nothing needs your attention.'));
+    notes.forEach(nt => {
+      const it = el('div','bell-item');
+      it.innerHTML = `<span class="bell-dot2" style="background:${nt.color}"></span><div><div class="bell-t">${nt.t}</div><div class="bell-s">${nt.s}</div></div>`;
+      it.onclick = () => { pop.remove(); nt.go(); };
+      pop.appendChild(it);
+    });
+    bell.appendChild(pop);
+  };
+  document.addEventListener('click', e => { const p = qs('.bell-pop'); if(p && !bell.contains(e.target)) p.remove(); });
 }
 
 /* ─────────────── SIDEBAR ─────────────── */
@@ -590,10 +885,25 @@ function buildSidebar() {
   footer.appendChild(seal);
   sb.appendChild(footer);
 }
+function pendingQueue() { return (REPORT.snapshot.human_queue||[]).filter(i => !i._actioned); }
 function badge(item) {
   if(item.badge === 'alerts') return (REPORT.snapshot.quality_alerts||[]).length || null;
-  if(item.badge === 'queue') return (REPORT.snapshot.human_queue||[]).length || null;
+  if(item.badge === 'queue') return pendingQueue().length || null;
   return null;
+}
+function refreshBadges() {
+  const qItem = NAV_ITEMS.find(n => n.key === 'queue');
+  const items = document.querySelectorAll('.sb-item');
+  NAV_ITEMS.forEach((nav, i) => {
+    const sbItem = items[i]; if(!sbItem) return;
+    let b = sbItem.querySelector('.sb-badge');
+    const count = badge(nav);
+    if(count) {
+      if(!b) { b = txt('span','sb-badge'+(nav.key==='queue'?' brass':''), count); sbItem.appendChild(b); }
+      else b.textContent = count;
+    } else if(b) { b.remove(); }
+  });
+  initBell();
 }
 function setNav(key) {
   ACTIVE = key; SEL = null;
@@ -608,6 +918,8 @@ function render(key) {
   main.classList.remove('fade-in');
   void main.offsetWidth;
   main.classList.add('fade-in');
+  if(typeof updateFrenFab === 'function') updateFrenFab();
+  if(GFREN_OPEN) gRenderChips();
   if(COPILOT) { renderCopilot(COPILOT, main); return; }
   ({overview:viewOverview, quality:viewQuality, queue:viewQueue, runs:viewRuns, guardrails:viewGuardrails}[key] || viewOverview)(main);
   renderRail();
@@ -626,7 +938,7 @@ function viewOverview(main) {
   const pw = REPORT.prior_week_metrics || {};
   const brands = Object.entries(bm);
   const ss = REPORT.safety_summary;
-  const queue = REPORT.snapshot.human_queue || [];
+  const queue = pendingQueue();
   const alerts = getAlerts();
 
   const avgCSAT = brands.length ? brands.reduce((a,[,m])=>a+m.csat,0)/brands.length : 0;
@@ -683,6 +995,16 @@ function viewOverview(main) {
   });
   body.appendChild(kpi);
 
+  // Trend + channel mix
+  const daily = REPORT.daily_trend || [];
+  const mix = REPORT.channel_mix || {};
+  if(daily.length || Object.keys(mix).length) {
+    const trow = el('div','trend-row');
+    if(daily.length) trow.appendChild(buildTrendPanel(daily));
+    if(Object.keys(mix).length) trow.appendChild(buildChannelPanel(mix));
+    body.appendChild(trow);
+  }
+
   // Brand table
   const btWrap = el('div','brand-table');
   const bhead = el('div','bt-head');
@@ -735,6 +1057,72 @@ function viewOverview(main) {
   main.innerHTML = '';
   main.appendChild(w);
   main.appendChild(body);
+}
+
+/* ─────────────── TREND + CHANNEL PANELS ─────────────── */
+function buildTrendPanel(daily) {
+  const W = 320, H = 96, padL = 4, padR = 4, base = H - 16, topPad = 10;
+  const vols = daily.map(d => d.volume);
+  const maxV = Math.max(...vols, 1);
+  const npsv = daily.map(d => d.nps);
+  const minN = Math.min(...npsv, 0), maxN = Math.max(...npsv, 1);
+  const spanN = (maxN - minN) || 1;
+  const n = daily.length;
+  const slot = (W - padL - padR) / n;
+
+  let bars = '';
+  daily.forEach((d, i) => {
+    const h = (d.volume / maxV) * (base - topPad);
+    const x = padL + i * slot + slot * 0.2;
+    const w = slot * 0.6;
+    const y = base - h;
+    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="var(--teal-soft)" stroke="#C8DDD9" stroke-width="1"/>`;
+  });
+  const pts = daily.map((d, i) => {
+    const x = padL + i * slot + slot / 2;
+    const y = topPad + (1 - (d.nps - minN) / spanN) * (base - topPad);
+    return [x, y];
+  });
+  const path = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const dots = pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.4" fill="var(--ink)"/>`).join('');
+
+  const panel = el('div','panel');
+  panel.innerHTML = `
+    <div class="panel-head">
+      <span class="panel-title">Feedback · last 7 days</span>
+      <div class="panel-legend">
+        <span class="lg"><span class="sw" style="background:var(--teal-soft);border:1px solid #C8DDD9"></span>Volume</span>
+        <span class="lg"><span class="sw line" style="background:var(--ink)"></span>NPS</span>
+      </div>
+    </div>
+    <svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <line class="gl" x1="0" y1="${base}" x2="${W}" y2="${base}"/>
+      ${bars}
+      <path d="${path}" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+      ${dots}
+    </svg>
+    <div class="spark-x">${daily.map(d => `<span>${d.label}</span>`).join('')}</div>
+  `;
+  return panel;
+}
+function buildChannelPanel(mix) {
+  const entries = Object.entries(mix).sort((a,b) => b[1]-a[1]);
+  const total = entries.reduce((a,[,v]) => a+v, 0) || 1;
+  const max = Math.max(...entries.map(([,v]) => v), 1);
+  const panel = el('div','panel');
+  const ph = el('div','panel-head');
+  ph.innerHTML = `<span class="panel-title">Channel mix</span><span class="panel-legend" style="color:var(--faint)">${total} tickets</span>`;
+  panel.appendChild(ph);
+  const list = el('div','chan-list');
+  entries.forEach(([name, v], i) => {
+    const pct = Math.round(v/total*100);
+    const w = Math.round(v/max*100);
+    const item = el('div','chan-item');
+    item.innerHTML = `<span class="chan-name">${channelLabel(name)}</span><div class="chan-track"><div class="chan-fill c${(i%4)+1}" style="width:${w}%"></div></div><span class="chan-val">${pct}%</span>`;
+    list.appendChild(item);
+  });
+  panel.appendChild(list);
+  return panel;
 }
 
 /* ─────────────── QUALITY ALERTS ─────────────── */
@@ -812,7 +1200,8 @@ function viewQueue(main) {
 
   const w = el('div');
   const head = el('div','sec-head');
-  head.innerHTML = `<div class="sec-crumb">Human-in-the-Loop · Approval Queue</div><div class="sec-title">Human Queue</div><div class="sec-sub">${queue.length} items pending · ${queue.filter(i=>i.priority&&i.priority.toString().toUpperCase().startsWith('HIGH')).length} high priority · agents drafted all replies</div>`;
+  const pend = queue.filter(i=>!i._actioned);
+  head.innerHTML = `<div class="sec-crumb">Human-in-the-Loop · Approval Queue</div><div class="sec-title">Human Queue</div><div class="sec-sub">${pend.length} items pending · ${pend.filter(i=>i.priority&&i.priority.toString().toUpperCase().startsWith('HIGH')).length} high priority · agents drafted all replies</div>`;
   w.appendChild(head);
 
   const body = el('div');
@@ -856,12 +1245,13 @@ function renderQueueList(wrap, queue, filter) {
     const isHigh = item.priority && item.priority.toString().toUpperCase().startsWith('HIGH');
     const name = isProc ? (SKU_NAMES[item.sku]||item.sku) : (item.product||'Warranty Claim');
     const meta = isProc ? `${item.store||'—'} · ${item.reason||'—'}` : `${item.brand||'—'} · AED ${item.declared_value_aed}`;
-    const row = el('div','data-row');
+    const row = el('div','data-row'+(item._actioned?' dr-row-done':''));
     row.innerHTML = `
       <div class="dr-main">
         <div class="dr-top">
           <span class="badge ${isProc?'brass':'teal'}">${isProc?'Procurement':'Warranty'}</span>
           ${isHigh?'<span class="badge blood">HIGH</span>':''}
+          ${item._actioned?`<span class="badge done">✓ ${item._actionLabel}</span>`:''}
           <span class="dr-id">${item.workflow_task_id||'—'}</span>
         </div>
         <div class="dr-title">${name}</div>
@@ -1065,6 +1455,19 @@ function renderFrenChips() {
     wrap.appendChild(chip);
   });
 }
+const FREN_STOP = new Set(['the','a','an','is','are','do','i','to','of','for','this','it','what','should','can','you','me','my','on','in','and','or','if','be','how','that','with','at','as','about','please','tell','give','need']);
+function frenMatch(text) {
+  const words = text.toLowerCase().match(/[a-z]+/g) || [];
+  const terms = words.filter(w => w.length > 2 && !FREN_STOP.has(w));
+  let best = null, bestScore = 0;
+  (FREN_CHIPS || []).forEach(c => {
+    const hay = (c.q + ' ' + c.a).toLowerCase();
+    let score = 0;
+    terms.forEach(t => { if(hay.includes(t)) score += (c.q.toLowerCase().includes(t) ? 2 : 1); });
+    if(score > bestScore) { bestScore = score; best = c; }
+  });
+  return bestScore >= 2 ? best.a : FALLBACK_FREN;
+}
 function sendFrenMsg() {
   const inp = qs('#fren-input');
   if(!inp || !inp.value.trim()) return;
@@ -1073,7 +1476,8 @@ function sendFrenMsg() {
   appendFrenMsg('user', text);
   qs('#fren-chips').innerHTML = '';
   showThinking();
-  setTimeout(() => { hideThinking(); appendFrenMsg('fren', FALLBACK_FREN); }, 900);
+  const reply = frenMatch(text);
+  setTimeout(() => { hideThinking(); appendFrenMsg('fren', reply); renderFrenChips(); }, 900);
 }
 function showThinking() {
   const msgs = qs('#fren-msgs');
@@ -1105,7 +1509,12 @@ function showConfirmModal(item, isProc) {
   modal.querySelector('.cancel').onclick = () => overlay.remove();
   modal.querySelector('.confirm').onclick = () => {
     overlay.remove();
-    appendFrenMsg('fren', `Done — ${item.workflow_task_id||'this item'} has been forwarded to ${desk}. They will review and action it. The item will remain in the queue until they confirm.`);
+    item._actioned = true;
+    item._actionLabel = isProc ? 'Forwarded' : 'Released';
+    refreshBadges();
+    const sub = qs('.copilot-actions .cp-action.primary');
+    if(sub) { sub.textContent = '✓ ' + item._actionLabel; sub.style.opacity = '.7'; sub.onclick = null; }
+    appendFrenMsg('fren', `Done — ${item.workflow_task_id||'this item'} has been forwarded to ${desk}. They will review and action it. It is marked ${item._actionLabel.toLowerCase()} in the queue.`);
   };
   overlay.onclick = e => { if(e.target === overlay) overlay.remove(); };
 }
