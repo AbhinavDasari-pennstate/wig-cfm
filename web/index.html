@@ -1996,10 +1996,97 @@ function railLoop(rail, r) {
     </div>`;
 }
 function railEmpty(rail) {
+  const b = railBriefing(ACTIVE);
   rail.innerHTML = '';
-  const e = el('div','rail-empty');
-  e.innerHTML = `<div class="re-icon">◈</div><div class="re-title">Select an item</div><div class="re-sub">Click any row in the main panel to see full detail here.</div>`;
-  rail.appendChild(e);
+  const head = el('div','rail-head');
+  head.innerHTML = `<div class="rail-crumb">${b.crumb}</div><div class="rail-title">${b.title}</div><div class="rail-sub">${b.sub}</div>`;
+  rail.appendChild(head);
+  const body = el('div','rail-body');
+  if(b.stats) {
+    const sp = el('div','stat-pair');
+    b.stats.forEach(s => sp.appendChild(Object.assign(el('div','stat-box'), {innerHTML:`<div class="k">${s.k}</div><div class="v ${s.cls||''}">${s.v}</div>`})));
+    body.appendChild(sp);
+  }
+  b.sections.forEach(s => {
+    if(!s.rows.length) return;
+    const sec = el('div','rail-section');
+    sec.innerHTML = `<div class="rail-section-k">${s.k}</div>` + s.rows.map(r => `<div class="rail-kv"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+    body.appendChild(sec);
+  });
+  body.appendChild(txt('div','propose-note', b.hint));
+  rail.appendChild(body);
+}
+function railBriefing(active) {
+  const bm = REPORT.brand_metrics || {};
+  const brands = Object.keys(bm);
+  const alerts = getAlerts();
+  const queue = pendingQueue();
+  const high = queue.filter(i => i.priority && i.priority.toString().toUpperCase().startsWith('HIGH')).length;
+  const ss = REPORT.safety_summary || {};
+
+  if(active === 'quality') {
+    const aBrands = [...new Set(alerts.map(a => a.brand))];
+    return {
+      crumb:'Quality · Agent 3', title:'Scan summary', sub:'Daily scan · 06:00 GST',
+      stats:[{k:'Velocity alerts', v:alerts.length, cls:alerts.length?'neg':''},{k:'Brands hit', v:aBrands.length}],
+      sections:[{k:'Flagged products', rows:alerts.map(a => [`${a.brand} ${a.sku||a.product_sku}`, a.velocity_pct==null?'new SKU':'+'+a.velocity_pct+'%'])}],
+      hint:'Select an alert to inspect the cluster.'
+    };
+  }
+  if(active === 'queue') {
+    const proc = queue.filter(i => i.type==='PROCUREMENT_APPROVAL').length;
+    const warr = queue.filter(i => i.type==='WARRANTY_FULFILLMENT').length;
+    return {
+      crumb:'Human-in-the-loop', title:'Queue summary', sub:'Agents drafted every reply',
+      stats:[{k:'Pending', v:queue.length},{k:'High priority', v:high, cls:high?'neg':''}],
+      sections:[{k:'By type', rows:[['Procurement', proc],['Warranty', warr]]}],
+      hint:'Open an item to work it with fren.'
+    };
+  }
+  if(active === 'runs') {
+    const sc = REPORT.scenarios || [];
+    const ch = REPORT.channel_breakdown || {};
+    return {
+      crumb:'Agent activity', title:'Run summary', sub:'All agents · today',
+      stats:[{k:'Runs', v:sc.length},{k:'Failures', v:0, cls:'pos'}],
+      sections:[{k:'Channels', rows:Object.entries(ch).map(([c,n]) => [channelLabel(c), n])}],
+      hint:'Select a run to see its full trace.'
+    };
+  }
+  if(active === 'guardrails') {
+    return {
+      crumb:'Trust & safety', title:'Safety posture', sub:"Propose, don't transact",
+      stats:[{k:'POs auto-created', v:ss.purchase_orders_created??0, cls:'pos'},{k:'Txn tools wired', v:ss.transactional_tools_available??0, cls:'pos'}],
+      sections:[{k:'This session', rows:[['Manipulation contained', ss.manipulation_attempts_contained??0],['HITL escalations', ss.human_approval_tasks??0]]}],
+      hint:'The guarantee holds because the capability is absent.'
+    };
+  }
+  if(active === 'loop') {
+    const rows = REPORT.closed_loop || [];
+    const csats = rows.map(r => r.csat).filter(v => v!=null);
+    const avg = csats.length ? (csats.reduce((a,b)=>a+b,0)/csats.length).toFixed(1) : '—';
+    return {
+      crumb:'Resolution', title:'Closed-loop summary', sub:'Written back to SAP',
+      stats:[{k:'Loops closed', v:rows.length},{k:'Avg CSAT', v:avg, cls:csatClass(parseFloat(avg)||0)}],
+      sections:[{k:'Record', rows:[['System of record','SAP'],['Owned by agents','No']]}],
+      hint:'Select a case to see the SAP write-back.'
+    };
+  }
+  // overview (default)
+  const topAlert = alerts[0];
+  const watch = brands.length ? brands.map(x => [x, bm[x].nps]).sort((a,b)=>a[1]-b[1])[0] : null;
+  return {
+    crumb:'Overview · all brands', title:"Today's briefing", sub:'Snapshot across all brands',
+    stats:[{k:'Quality alerts', v:alerts.length, cls:alerts.length?'neg':''},{k:'Awaiting you', v:queue.length, cls:high?'neu':''}],
+    sections:[{k:'Where to look', rows:[
+      ['Top alert', topAlert ? `${topAlert.brand} ${topAlert.sku||topAlert.product_sku}` : 'none'],
+      ['Watch brand', watch ? `${watch[0]} (${fmtNPS(watch[1])})` : '—'],
+      ['High priority', high],
+      ['Safety contained', ss.manipulation_attempts_contained??0],
+      ['Last scan', '06:00 GST'],
+    ]}],
+    hint:'Click any brand or queue row for full detail.'
+  };
 }
 function railBrand(rail, {name, m, p}) {
   rail.innerHTML = '';
