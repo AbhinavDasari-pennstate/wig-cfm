@@ -1293,7 +1293,12 @@ function buildChannelPanel(mix) {
 /* ─────────────── QUALITY ALERTS ─────────────── */
 function getAlerts() {
   const vel = REPORT.scenarios.find(s => s.id === 'velocity_digest');
-  return vel ? (vel.result.alerts || []) : [];
+  const alerts = vel ? (vel.result.alerts || []) : [];
+  const qa = REPORT.snapshot.quality_alerts || [];
+  return alerts.map(a => {
+    const rec = qa.find(q => q.alert_id === a.alert_id) || {};
+    return {...a, category: a.category || rec.category || '', description: a.description || rec.description || ''};
+  });
 }
 function viewQuality(main) {
   const alerts = getAlerts();
@@ -1342,7 +1347,7 @@ function renderAlertList(wrap, alerts, filter) {
     card.innerHTML = `
       <div class="ac-top">
         <span class="badge ${typeCls}">${typeLabel}</span>
-        <span style="font-size:12.5px;font-weight:600">${alert.brand} · <span class="mono">${alert.sku||alert.product_sku}</span> · ${alert.category||''}</span>
+        <span style="font-size:12.5px;font-weight:600">${alert.brand} · <span class="mono">${alert.sku||alert.product_sku}</span>${alert.category?' · '+alert.category:''}</span>
       </div>
       <div class="ac-grid">
         <div class="ac-stat"><div class="k">Prior 3d</div><div class="v">${alert.prior??0}</div></div>
@@ -1351,7 +1356,7 @@ function renderAlertList(wrap, alerts, filter) {
         <div class="ac-stat"><div class="k">Total (7d)</div><div class="v">${alert.total??alert.ticket_count??'—'}</div></div>
         <div class="ac-stat"><div class="k">Vol-15</div><div class="v" style="color:var(--faint);font-size:12px">UNDER</div></div>
       </div>
-      <div class="ac-desc">"${alert.description||''}"</div>
+      ${alert.description?`<div class="ac-desc">"${alert.description}"</div>`:''}
     `;
     card.onclick = () => { document.querySelectorAll('.alert-card').forEach(e=>e.classList.remove('active')); card.classList.add('active'); selectItem('alert', alert, null); };
     wrap.appendChild(card);
