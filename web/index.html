@@ -1571,7 +1571,37 @@ function buildDocColumn(item, isProc, isHigh, name) {
   col.appendChild(foot);
   return col;
 }
-function buildFrenColumn(){ return el('div','col col-fren'); }
+function buildFrenColumn(item, isProc, script, name) {
+  const col = el('div','col col-fren');
+  const head = el('div','fren-head');
+  head.innerHTML = `<div class="fren-avatar">f</div><div><div class="fren-name">fren <span class="sub">· Co-solver</span></div></div><div class="fren-live"><span class="d"></span> Live</div>`;
+  col.appendChild(head);
+
+  const ctx = el('div','fren-ctx');
+  const chips = [];
+  chips.push(item.workflow_task_id||'WF');
+  if(isProc) { if(item.sku) chips.push(item.sku); if(item.reason) chips.push(item.reason.replace('_',' ').toLowerCase()); }
+  else { chips.push('AED '+item.declared_value_aed+(item.priority&&item.priority.toString().toUpperCase().startsWith('HIGH')?' · HIGH':'')); chips.push('warranty valid'); }
+  const prec = precedentFor(item, isProc); if(prec) { const m = prec.match(/(\d+)/); if(m) chips.push(m[1]+' precedents'); }
+  ctx.innerHTML = chips.map(c => `<span class="ctxchip">${c}</span>`).join('');
+  col.appendChild(ctx);
+
+  const msgs = el('div','fren-msgs'); msgs.id = 'fren-msgs';
+  col.appendChild(msgs);
+
+  const chipsWrap = el('div','fchips');
+  chipsWrap.appendChild(txt('div','fchips-label','Suggested'));
+  const inner = el('div'); inner.id = 'fren-chips';
+  chipsWrap.appendChild(inner);
+  col.appendChild(chipsWrap);
+
+  const iw = el('div','finput');
+  const inp = el('textarea','fren-input'); inp.id = 'fren-input'; inp.placeholder = 'Ask fren anything…'; inp.rows = 1;
+  const send = el('button','fsend','→'); send.onclick = sendFrenMsg;
+  iw.append(inp, send);
+  col.appendChild(iw);
+  return col;
+}
 function openGapCheck(){}
 function buildDocPreview(doc, item, isProc, isHigh, name) {
   const dh = el('div','doc-head');
