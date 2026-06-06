@@ -587,6 +587,47 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
 .user-pop .up-row{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:6px 14px;}
 .user-pop .up-row .k{color:var(--faint);}
 .user-pop .up-row .v{color:var(--ink2);font-weight:500;}
+/* ── IMMERSIVE RUN VIEW ── */
+.rv{display:flex;flex-direction:column;height:calc(100vh - 52px);overflow:hidden;}
+.rv-head{display:flex;align-items:center;gap:14px;padding:0 22px;height:50px;border-bottom:1px solid var(--line);background:var(--paper2);flex:none;}
+.rv-htitle{display:flex;align-items:center;gap:10px;min-width:0;}
+.rv-name{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw;}
+.rv-reopened{font-size:10px;font-weight:700;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--brass-soft);color:var(--brass-ink);flex:none;}
+.rv-hmeta{display:flex;align-items:center;gap:10px;font-size:11px;color:var(--dim);}
+.rv-chan{color:var(--faint);}
+.rv-actions{margin-left:auto;display:flex;gap:8px;}
+.rv-iv{font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid var(--brass);background:var(--brass-soft);color:var(--brass-ink);cursor:pointer;display:flex;align-items:center;gap:6px;}
+.rv-iv:hover,.rv-iv.on{background:var(--brass);color:#fff;}
+.rv-grid{flex:1;display:grid;grid-template-columns:1fr 360px;overflow:hidden;transition:grid-template-columns .25s ease;}
+.rv.fren-open .rv-grid{grid-template-columns:1fr 360px 340px;}
+.rv-trace,.rv-art{overflow-y:auto;padding:20px 22px 40px;}
+.rv-trace{border-right:1px solid var(--line);background:var(--card2);}
+.rv-art{background:var(--card);}
+.rv-colk{font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin:0 0 14px;display:flex;align-items:center;gap:7px;}
+.rv-art .rv-colk:not(:first-child){margin-top:26px;}
+.rv-thread{position:relative;padding-left:22px;}
+.rv-thread::before{content:"";position:absolute;left:7px;top:4px;bottom:4px;width:1px;background:linear-gradient(180deg,var(--teal),#CFE0DD);}
+.rv-stage{margin-bottom:20px;}
+.rv-stage-agent{font-family:var(--serif);font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.rv-stage-agent::before{content:"";width:11px;height:11px;border-radius:50%;background:var(--card);border:2px solid var(--teal);flex:none;margin-left:-20px;}
+.rv-stage.human .rv-stage-agent{color:var(--brass-ink);}
+.rv-stage.human .rv-stage-agent::before{background:var(--brass);border-color:var(--brass);box-shadow:0 0 0 3px var(--brass-soft);}
+.rv-steps{display:flex;flex-direction:column;}
+.rv-step{display:flex;gap:12px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12px;color:var(--dim);align-items:flex-start;}
+.rv-step:last-child{border-bottom:0;}
+.rv-step-lbl{color:var(--ink);font-weight:500;width:120px;flex:none;}
+.rv-step-body{flex:1;min-width:0;line-height:1.55;}
+.rv-tool{font-family:var(--mono);font-size:10px;color:var(--teal-ink);background:var(--teal-soft);border:1px solid #CDE0DC;padding:1px 6px;border-radius:4px;margin-right:6px;white-space:normal;word-break:break-word;display:inline-block;}
+.rv-tool.safety{color:var(--blood);background:var(--blood-soft);border-color:#E8CFC6;}
+.rv-scores{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px;}
+.rv-score{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;}
+.rv-score .k{font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);}
+.rv-score .v{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--ink);margin-top:4px;}
+@media (max-width: 900px){
+  .rv{height:auto;}
+  .rv-grid,.rv.fren-open .rv-grid{grid-template-columns:1fr;}
+  .rv-name{max-width:55vw;}
+}
 </style>
 </head>
 <body>
@@ -714,6 +755,8 @@ let REPORT = null;
 let ACTIVE = 'overview';
 let SEL = null;       // {type, data}
 let COPILOT = null;   // queue item
+let RUNVIEW = null;   // scenario being viewed immersively
+let RV_FREN_OPEN = false;
 let FREN_HIST = [];
 let FREN_CHIPS = [];
 let INSIGHT_IDX = 0;
@@ -794,7 +837,7 @@ function initNavToggle() {
   try { saved = localStorage.getItem('wig-nav'); } catch(e) {}
   if(saved === 'collapsed') qs('#app').classList.add('nav-collapsed');
   const toggle = () => {
-    if(COPILOT) return;
+    if(COPILOT || RUNVIEW) return;
     const collapsed = qs('#app').classList.toggle('nav-collapsed');
     try { localStorage.setItem('wig-nav', collapsed ? 'collapsed' : 'expanded'); } catch(e) {}
   };
@@ -1110,6 +1153,7 @@ function render(key) {
   main.classList.add('fade-in');
   if(typeof updateFrenFab === 'function') updateFrenFab();
   if(GFREN_OPEN) gRenderChips();
+  if(RUNVIEW) { renderRunView(RUNVIEW, main); return; }
   if(COPILOT) { renderCopilot(COPILOT, main); return; }
   ({overview:viewOverview, quality:viewQuality, queue:viewQueue, runs:viewRuns, guardrails:viewGuardrails, loop:viewLoop}[key] || viewOverview)(main);
   renderRail();
@@ -1480,6 +1524,121 @@ function closeCopilot() {
   COPILOT = null;
   qs('#app').classList.remove('copilot');
   render(ACTIVE);
+}
+/* ─────────────── RUN VIEW (immersive) ─────────────── */
+function openRunView(sc) {
+  RUNVIEW = sc;
+  RV_FREN_OPEN = false;
+  FREN_HIST = [];
+  qs('#app').classList.add('copilot');
+  render(ACTIVE);
+}
+function closeRunView() {
+  RUNVIEW = null;
+  RV_FREN_OPEN = false;
+  qs('#app').classList.remove('copilot');
+  render(ACTIVE);
+}
+function renderRunView(sc, main) {
+  const out = outcomeFor(sc);
+  const nums = agentNums(sc.stages);
+  const lang = sc.input ? sc.input.lang : '—';
+  const ch = sc.channel ? sc.channel.split(' ')[0] : '—';
+
+  const rv = el('div','rv'+(RV_FREN_OPEN?' fren-open':''));
+  const head = el('div','rv-head');
+  const back = el('span','cp-back','◁ Runs'); back.onclick = closeRunView;
+  const title = el('div','rv-htitle');
+  title.innerHTML = `<span class="rv-name">${sc.title}</span><span class="outcome ${out.cls}">${out.label}</span>${sc._reopened?'<span class="rv-reopened">⟲ reopened</span>':''}`;
+  const meta = el('div','rv-hmeta');
+  meta.innerHTML = `<div class="agent-pills">${nums.map(n=>`<span class="a-pill a${n}">Agent ${n}</span>`).join('')}</div><span class="rv-chan">${channelLabel(ch)} · ${langLabel(lang)}</span>`;
+  const actions = el('div','rv-actions');
+  const ivBtn = el('button','rv-iv'+(RV_FREN_OPEN?' on':''),'⚑ Intervene');
+  ivBtn.onclick = () => { if(typeof toggleIntervene === 'function') toggleIntervene(sc); };
+  actions.appendChild(ivBtn);
+  head.append(back, title, meta, actions);
+  rv.appendChild(head);
+
+  const grid = el('div','rv-grid');
+  grid.appendChild(buildRunTrace(sc));
+  grid.appendChild(buildRunArtifacts(sc));
+  if(RV_FREN_OPEN) grid.appendChild(buildIntervenePanel(sc));
+  rv.appendChild(grid);
+
+  main.innerHTML = '';
+  main.appendChild(rv);
+  if(RV_FREN_OPEN) initIntervene(sc);
+}
+function buildRunTrace(sc) {
+  const col = el('div','rv-trace');
+  col.appendChild(txt('div','rv-colk','◷ Agent trace'));
+  const thread = el('div','rv-thread');
+  (sc.stages||[]).forEach(stage => thread.appendChild(buildTraceStage(stage)));
+  col.appendChild(thread);
+  return col;
+}
+function buildTraceStage(stage) {
+  const human = /human/i.test(stage.agent);
+  const node = el('div','rv-stage'+(human?' human':''));
+  node.innerHTML = `<div class="rv-stage-agent">${stage.agent}</div>`;
+  const steps = el('div','rv-steps');
+  (stage.steps||[]).forEach(step => {
+    const warn = String(step.label).startsWith('⚠') || String(step.label).startsWith('🔴');
+    const row = el('div','rv-step');
+    row.innerHTML = `<span class="rv-step-lbl" style="${warn?'color:var(--blood)':''}">${step.label}</span><span class="rv-step-body">${step.tool?`<span class="rv-tool ${step.tool==='safety'?'safety':''}">${step.tool}</span>`:''}${step.detail||''}</span>`;
+    steps.appendChild(row);
+  });
+  node.appendChild(steps);
+  return node;
+}
+function parseScores(sc) {
+  let blob = '';
+  (sc.stages||[]).forEach(st => (st.steps||[]).forEach(s => { blob += ' ' + (s.detail||''); }));
+  const csat = blob.match(/CSAT\s*(\d)/i);
+  const nps  = blob.match(/NPS\s*([+-]?\d+)/i);
+  const ces  = blob.match(/CES\s*(\d)/i);
+  if(!csat && !nps && !ces) return null;
+  return { csat: csat?csat[1]:null, nps: nps?nps[1]:null, ces: ces?ces[1]:null };
+}
+function buildRunArtifacts(sc) {
+  const col = el('div','rv-art');
+  const lang = sc.input ? sc.input.lang : '—';
+  const isRTL = lang === 'ARABIC';
+
+  const sr = parseScores(sc);
+  if(sr) {
+    col.appendChild(txt('div','rv-colk','◆ Resolution scores'));
+    const strip = el('div','rv-scores');
+    strip.innerHTML =
+      `<div class="rv-score"><div class="k">CSAT</div><div class="v">${sr.csat??'—'}</div></div>`+
+      `<div class="rv-score"><div class="k">NPS</div><div class="v">${sr.nps!=null?((+sr.nps>0?'+':'')+sr.nps):'—'}</div></div>`+
+      `<div class="rv-score"><div class="k">CES</div><div class="v">${sr.ces??'—'}</div></div>`;
+    col.appendChild(strip);
+  }
+
+  if(sc.input && sc.input.text) {
+    col.appendChild(txt('div','rv-colk','✉ Inbound'));
+    const mb = el('div','msg-block');
+    mb.innerHTML = `<div class="lang">${sc.input.customer||'—'} · ${langLabel(lang)}</div><div class="msg-body" ${isRTL?'dir="rtl"':''}>${sc.input.text}</div>`;
+    col.appendChild(mb);
+  }
+
+  if(sc.messages && sc.messages.length) {
+    col.appendChild(txt('div','rv-colk','✎ Messages'));
+    sc.messages.forEach(m => {
+      const rtl = m.language === 'ARABIC';
+      const mb = el('div','msg-block');
+      mb.innerHTML = `<div class="lang">${m.label} · ${langLabel(m.language)}</div><div class="msg-body" ${rtl?'dir="rtl"':''}>${m.text||'—'}</div>`;
+      col.appendChild(mb);
+    });
+  }
+
+  if(sc.edge) {
+    const eq = el('div','edge-quote');
+    eq.innerHTML = `<div class="q">"${sc.edge}"</div><div class="src">Why it wins</div>`;
+    col.appendChild(eq);
+  }
+  return col;
 }
 const NOTES = {};   // workflow_task_id -> operator note (session only)
 function renderCopilot(item, main) {
@@ -1876,7 +2035,7 @@ function renderRunList(wrap, scenarios, filter) {
       </div>
       <div class="dr-right"><div class="dr-meta">Today ${RUN_TIMES[i]||'—'}</div><div class="dr-meta">GST</div></div>
     `;
-    row.onclick = () => selectItem('run', sc, row);
+    row.onclick = () => openRunView(sc);
     list.appendChild(row);
   });
   if(!filtered.length) list.appendChild(txt('div','','No runs matching this filter.'));
