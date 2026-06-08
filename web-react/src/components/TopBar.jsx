@@ -56,7 +56,7 @@ export default function TopBar() {
       <button className="nav-toggle" id="nav-toggle" title="Toggle navigation (⌘B)" onClick={app.toggleNav}>
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M2 4h12M2 8h12M2 12h12" /></svg>
       </button>
-      <div className="tb-brand">
+      <div className="tb-brand" style={{ cursor: 'pointer' }} title="Go to Overview" onClick={() => app.setNav('overview')}>
         <div className="tb-live-dot" />
         <div><div className="tb-wordmark">Wonderful<span>×</span>WIG</div></div>
       </div>
