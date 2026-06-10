@@ -134,8 +134,15 @@ export function frenAnswer(report, q) {
 
 export const api = {
   async fetchReport() {
-    const r = await fetch('/api/demo');
-    if (!r.ok) throw new Error(r.status);
-    return r.json();
+    try {
+      const r = await fetch('/api/demo');
+      if (!r.ok) throw new Error(r.status);
+      return await r.json();
+    } catch {
+      // Backend unreachable — fall back to the bundled sample report so the
+      // dashboard still demos standalone. App shows an "offline" pill.
+      const sample = (await import('./sample.json')).default;
+      return { ...sample, _offline: true };
+    }
   },
 };

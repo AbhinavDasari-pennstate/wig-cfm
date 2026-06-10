@@ -17,7 +17,7 @@ export function trendArrow(cur, prior) {
 
 export function timeAgo(ts) {
   if (!ts) return '—';
-  const d = (Date.now() - new Date(ts).getTime()) / 60000;
+  const d = Math.max(0, (Date.now() - new Date(ts).getTime()) / 60000);
   if (d < 1) return 'just now';
   if (d < 60) return Math.round(d) + 'm ago';
   if (d < 1440) return Math.round(d / 60) + 'h ago';

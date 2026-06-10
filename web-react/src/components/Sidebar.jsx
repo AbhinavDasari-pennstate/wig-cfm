@@ -1,4 +1,5 @@
 import { useApp } from '../App.jsx';
+import { press } from '../lib/a11y.js';
 import { NAV_ITEMS } from '../lib/constants.js';
 import { pendingQueue } from '../lib/data.js';
 
@@ -40,7 +41,7 @@ export default function Sidebar() {
               key={item.key}
               className={'sb-item' + (item.key === active ? ' active' : '')}
               title={item.label}
-              onClick={() => setNav(item.key)}
+              {...press(() => setNav(item.key), { 'aria-current': item.key === active ? 'page' : undefined })}
             >
               <NavIcon name={item.key} color={item.dot} />
               <span className="sb-label">{item.label}</span>

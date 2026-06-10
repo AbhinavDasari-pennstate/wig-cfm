@@ -662,3 +662,13 @@ body{font-family:var(--sans);color:var(--ink);background:var(--paper);-webkit-fo
   .rv-grid,.rv.fren-open .rv-grid{grid-template-columns:1fr;}
   .rv-name{max-width:55vw;}
 }
+
+/* ── ADDED: accessibility + offline mode ── */
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px;border-radius:6px;}
+.topbar :focus-visible{outline-color:var(--brass);}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
+.offline-pill{position:fixed;left:16px;bottom:16px;z-index:500;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--brass-ink);background:var(--brass-soft);border:1px solid var(--line2);border-radius:999px;padding:5px 12px;box-shadow:var(--sh1);cursor:default;}
+.retry-btn{margin-left:10px;font:inherit;font-weight:600;color:var(--teal-ink);background:var(--teal-soft);border:1px solid var(--line2);border-radius:8px;padding:6px 14px;cursor:pointer;}
+.retry-btn:hover{background:#d6e6e3;}

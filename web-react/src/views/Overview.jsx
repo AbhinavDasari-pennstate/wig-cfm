@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { press } from '../lib/a11y.js';
 import { useApp } from '../App.jsx';
 import { BRAND_REGIONS, SKU_NAMES } from '../lib/constants.js';
 import { getAlerts, pendingQueue } from '../lib/data.js';
@@ -71,8 +72,8 @@ export default function Overview() {
               )}
             </div>
             <div className="ins-chips">
-              <span className="ins-chip primary" onClick={() => setNav('quality')}>Open Quality Alerts →</span>
-              <span className="ins-chip" onClick={() => setNav('runs')}>View agent runs</span>
+              <span className="ins-chip primary" {...press(() => setNav('quality'))}>Open Quality Alerts →</span>
+              <span className="ins-chip" {...press(() => setNav('runs'))}>View agent runs</span>
             </div>
             {alerts.length > 1 && (
               <div className="ins-nav">
@@ -106,7 +107,7 @@ export default function Overview() {
             const p = pw[name];
             const tr = trendArrow(m.nps, p ? p.nps : null);
             return (
-              <div className="bt-row" key={name} onClick={() => selectItem('brand', { name, m, p })}>
+              <div className="bt-row" key={name} {...press(() => selectItem('brand', { name, m, p }))}>
                 <div className="bt-brand">{name}<span className="region">{BRAND_REGIONS[name] || ''}</span></div>
                 <div className="bt-val" style={{ fontSize: '14px' }}>{m.tickets}</div>
                 <div className={'bt-val ' + csatClass(m.csat)}>{fmtCSAT(m.csat)}</div>
@@ -129,7 +130,7 @@ export default function Overview() {
               const name = isProc ? SKU_NAMES[item.sku] || item.sku : item.product || 'Warranty claim';
               const meta = isProc ? item.store : `${item.brand} · AED ${item.declared_value_aed}`;
               return (
-                <div className="qp-row" key={i} onClick={() => setNav('queue')}>
+                <div className="qp-row" key={i} {...press(() => setNav('queue'))}>
                   <div><span className={'badge ' + (isProc ? 'brass' : 'teal')}>{isProc ? 'Procurement' : 'Warranty'}</span></div>
                   {isHighPriority(item) && <div><span className="badge blood">HIGH</span></div>}
                   <div className="qp-info"><div className="qp-name">{name}</div><div className="qp-meta">{meta}</div></div>

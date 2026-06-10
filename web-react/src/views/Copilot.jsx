@@ -3,15 +3,19 @@ import { useApp } from '../App.jsx';
 import { SKU_NAMES, FREN_SCRIPTS } from '../lib/constants.js';
 import { isHighPriority } from '../lib/format.js';
 import { timelineSteps, precedent, gapChecks, frenMatch, isArabic } from '../lib/copilot.js';
+import { loadNote, saveNote } from '../lib/store.js';
 import { FrenMessages, FrenInput } from '../components/FrenBits.jsx';
-
-const NOTES = {}; // workflow_task_id -> operator note (session only)
 
 /* ─────────── shared modals ─────────── */
 function ConfirmModal({ title, body, onCancel, onConfirm }) {
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onCancel(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onCancel]);
   return (
     <div className="cp-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onCancel(); }}>
-      <div className="cp-modal">
+      <div className="cp-modal" role="dialog" aria-modal="true" aria-label={title}>
         <h3>{title}</h3>
         <p>{body}</p>
         <div className="cp-modal-btns">
@@ -26,9 +30,14 @@ function ConfirmModal({ title, body, onCancel, onConfirm }) {
 function GapCheckModal({ item, checks, onClose }) {
   const pass = checks.filter((c) => c.ok).length;
   const flagged = checks.length - pass;
+  useEffect(() => {
+    const h = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
   return (
     <div className="gc-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="gc-modal">
+      <div className="gc-modal" role="dialog" aria-modal="true" aria-label="Gap check">
         <div className="gc-h"><span style={{ color: 'var(--teal)' }}>⚑</span><span className="t">Gap Check · {item.workflow_task_id || ''}</span><span className="x" onClick={onClose}>×</span></div>
         <div className="gc-b">
           {checks.map((c, i) => (
@@ -46,7 +55,7 @@ function GapCheckModal({ item, checks, onClose }) {
 
 /* ─────────── standard (procurement / warranty) copilot ─────────── */
 function StandardCopilot({ item }) {
-  const { report, closeCopilot, bump } = useApp();
+  const { report, closeCopilot, actionItem } = useApp();
   const isProc = item.type === 'PROCUREMENT_APPROVAL';
   const isHigh = isHighPriority(item);
   const name = isProc ? SKU_NAMES[item.sku] || item.sku : item.product || 'Warranty Claim';
@@ -56,7 +65,7 @@ function StandardCopilot({ item }) {
   const [hist, setHist] = useState([]);
   const [thinking, setThinking] = useState(false);
   const [frenInput, setFrenInput] = useState('');
-  const [note, setNote] = useState(NOTES[item.workflow_task_id] || '');
+  const [note, setNote] = useState(() => loadNote(item.workflow_task_id));
   const [gapOpen, setGapOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [actioned, setActioned] = useState(!!item._actioned);
@@ -82,11 +91,10 @@ function StandardCopilot({ item }) {
   const desk = isProc ? 'Procurement Buyer Desk' : 'Warranty Desk';
   const doConfirm = () => {
     setConfirmOpen(false);
-    item._actioned = true;
-    item._actionLabel = isProc ? 'Forwarded' : 'Released';
+    const label = isProc ? 'Forwarded' : 'Released';
+    actionItem(item.workflow_task_id, label);
     setActioned(true);
-    bump();
-    setHist((h) => [...h, { role: 'fren', text: `Done — ${item.workflow_task_id || 'this item'} has been forwarded to ${desk}. They will review and action it. It is marked ${item._actionLabel.toLowerCase()} in the queue.` }]);
+    setHist((h) => [...h, { role: 'fren', text: `Done — ${item.workflow_task_id || 'this item'} has been forwarded to ${desk}. They will review and action it. It is marked ${label.toLowerCase()} in the queue.` }]);
   };
   const submitLabel = isProc ? 'Forward to Buyer Desk →' : 'Release to Warranty Desk →';
 
@@ -99,7 +107,7 @@ function StandardCopilot({ item }) {
   else { ctxChips.push('AED ' + item.declared_value_aed + (isHigh ? ' · HIGH' : '')); ctxChips.push('warranty valid'); }
   if (prec) ctxChips.push(prec.count + ' precedents');
 
-  const setNoteVal = (v) => { setNote(v); NOTES[item.workflow_task_id] = v; };
+  const setNoteVal = (v) => { setNote(v); saveNote(item.workflow_task_id, v); };
   const onDocTool = (label) => {
     if (label === '✎ Edit' || label === 'Adjust tone') {
       setFrenInput(label === 'Adjust tone' ? 'Adjust the tone of this reply' : 'Help me edit this reply');
@@ -160,7 +168,7 @@ function StandardCopilot({ item }) {
         <div className="ck">◷ Your notes</div>
         <div className="ctx-card">
           <textarea ref={notesRef} className="notes-area" placeholder="Add a note for the desk…" value={note} onChange={(e) => setNoteVal(e.target.value)} />
-          <div className="notes-saved" style={{ display: note.trim() ? 'flex' : 'none' }}>✓ Saved · session only</div>
+          <div className="notes-saved" style={{ display: note.trim() ? 'flex' : 'none' }}>✓ Saved on this device</div>
         </div>
       </div>
 
@@ -242,7 +250,7 @@ function StandardCopilot({ item }) {
 
 /* ─────────── intervention copilot variant ─────────── */
 function InterventionCopilot({ item }) {
-  const { report, closeCopilot, openRun, bump } = useApp();
+  const { report, closeCopilot, openRun, actionItem } = useApp();
   const [hist, setHist] = useState([]);
   const [thinking, setThinking] = useState(false);
   const [frenInput, setFrenInput] = useState('');
@@ -273,8 +281,8 @@ function InterventionCopilot({ item }) {
   const goRun = () => { const sc = (report.scenarios || []).find((s) => s.id === item.source_run); if (sc) { closeCopilot(); openRun(sc); } };
   const doConfirm = () => {
     setConfirmOpen(false);
-    item._actioned = true; item._actionLabel = 'Applied';
-    setActioned(true); bump();
+    actionItem(item.workflow_task_id, 'Applied');
+    setActioned(true);
     setHist((h) => [...h, { role: 'fren', text: 'Done — ' + item.workflow_task_id + ' has been released to ' + item.assigned_to + '. They will review and action it. It is marked applied in the queue.' }]);
   };
   const msg = item.drafted_message || '—';

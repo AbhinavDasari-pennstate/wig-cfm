@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { press } from '../lib/a11y.js';
 import { useApp } from '../App.jsx';
 import { getAlerts } from '../lib/data.js';
 
@@ -8,12 +9,16 @@ export default function Quality() {
   const alerts = getAlerts(report);
   const qAlerts = report.snapshot.quality_alerts || [];
 
+  // The alert payload distinguishes new-SKU clusters (no baseline →
+  // velocity_pct == null) from true velocity spikes. The old filter keyed on a
+  // `type` field the data never carries, so both sub-tabs were always empty.
+  const kindOf = (a) => (a.velocity_pct == null ? 'new_sku' : 'spike');
   const tabs = [
     { key: 'all', label: 'All', n: alerts.length },
-    { key: 'velocity_spike', label: 'Velocity Spike', n: alerts.filter((a) => a.type === 'velocity_spike').length },
-    { key: 'volume_threshold', label: 'Volume Threshold', n: alerts.filter((a) => a.type === 'volume_threshold').length },
+    { key: 'new_sku', label: 'New SKU', n: alerts.filter((a) => kindOf(a) === 'new_sku').length },
+    { key: 'spike', label: 'Velocity Spike', n: alerts.filter((a) => kindOf(a) === 'spike').length },
   ];
-  const filtered = filter === 'all' ? alerts : alerts.filter((a) => a.type === filter);
+  const filtered = filter === 'all' ? alerts : alerts.filter((a) => kindOf(a) === filter);
 
   return (
     <div>
@@ -25,7 +30,7 @@ export default function Quality() {
 
       <div className="filter-tabs">
         {tabs.map((t) => (
-          <div key={t.key} className={'ftab' + (filter === t.key ? ' active' : '')} onClick={() => setFilter(t.key)}>
+          <div key={t.key} className={'ftab' + (filter === t.key ? ' active' : '')} {...press(() => setFilter(t.key))}>
             {t.label}<span className="cnt">{t.n}</span>
           </div>
         ))}
@@ -42,7 +47,7 @@ export default function Quality() {
               <div
                 key={alert.alert_id}
                 className={'alert-card' + (isNew ? ' blood' : '') + (active ? ' active' : '')}
-                onClick={() => selectItem('alert', alert)}
+                {...press(() => selectItem('alert', alert), { 'aria-pressed': active })}
               >
                 <div className="ac-top">
                   <span className={'badge ' + (isNew ? 'blood' : 'brass')}>{isNew ? 'NEW SKU' : 'VELOCITY SPIKE'}</span>

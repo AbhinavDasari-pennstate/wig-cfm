@@ -27,12 +27,17 @@ function TraceStage({ stage }) {
   );
 }
 
-function parseScores(stages) {
+// Prefer structured scores from the backend; fall back to scanning the trace
+// text (legacy reports), tolerating decimals and multi-digit values.
+function parseScores(sc, stages) {
+  if (sc.scores && (sc.scores.csat != null || sc.scores.nps != null || sc.scores.ces != null)) {
+    return { csat: sc.scores.csat ?? null, nps: sc.scores.nps ?? null, ces: sc.scores.ces ?? null };
+  }
   let blob = '';
   (stages || []).forEach((st) => (st.steps || []).forEach((s) => { blob += ' ' + (s.detail || ''); }));
-  const csat = blob.match(/CSAT\s*(\d)/i);
+  const csat = blob.match(/CSAT\s*(\d+(?:\.\d+)?)/i);
   const nps = blob.match(/NPS\s*([+-]?\d+)/i);
-  const ces = blob.match(/CES\s*(\d)/i);
+  const ces = blob.match(/CES\s*(\d+(?:\.\d+)?)/i);
   if (!csat && !nps && !ces) return null;
   return { csat: csat ? csat[1] : null, nps: nps ? nps[1] : null, ces: ces ? ces[1] : null };
 }
@@ -60,9 +65,9 @@ const draftForKind = (sc, kind) =>
   `Drafted at your request: "${kind}". A revised proposal for ${sc.title} has been prepared for the ${deskForKind(kind)} to review and action. Nothing has been re-sent to the customer.`;
 
 export default function RunView({ sc }) {
-  const { report, closeRun, rvFrenOpen, setRvFrenOpen, toast, bump } = useApp();
-  const [stages, setStages] = useState(sc.stages || []);
-  const [reopened, setReopened] = useState(!!sc._reopened);
+  const { closeRun, rvFrenOpen, setRvFrenOpen, toast, intervene } = useApp();
+  const stages = sc.stages || [];          // sc updates immutably via the store
+  const reopened = !!sc._reopened;
   const [hist, setHist] = useState([]);
   const [thinking, setThinking] = useState(false);
   const [input, setInput] = useState('');
@@ -89,32 +94,13 @@ export default function RunView({ sc }) {
       setThinking(false);
       const desk = deskForKind(text);
       const draft = draftForKind(sc, text);
+      intervene(sc.id, text, draft, desk);
       setHist((h) => [...h, { role: 'fren', text: draft + " I've added it to the Human Queue — open it there to approve." }]);
-      const n = (report.snapshot.human_queue || []).filter((i) => i.type === 'INTERVENTION').length + 1;
-      const item = {
-        workflow_task_id: 'WF-IV-' + n, type: 'INTERVENTION',
-        source_run: sc.id, source_title: sc.title, kind: text, request: text,
-        drafted_message: draft, summary: 'Human-requested change to ' + sc.title,
-        assigned_to: desk, status: 'pending_approval', priority: 'standard',
-        _origin: 'human', ts: new Date().toISOString(),
-      };
-      (report.snapshot.human_queue = report.snapshot.human_queue || []).push(item);
-      const stage = { agent: 'Human · Intervention', steps: [
-        { label: 'Requested', tool: null, detail: item.request },
-        { label: 'Drafted by agent', tool: 'draft', detail: item.summary },
-        { label: 'Queued for approval', tool: null, detail: item.workflow_task_id },
-      ] };
-      sc.stages = sc.stages || [];
-      sc.stages.push(stage);
-      setStages([...sc.stages]);
-      sc._reopened = true;
-      setReopened(true);
       toast('Proposal added to the Human Queue · linked to this run.');
-      bump();
     }, 800);
   };
 
-  const sr = parseScores(stages);
+  const sr = parseScores(sc, stages);
   const isRTL = isRTLLang(lang);
 
   return (

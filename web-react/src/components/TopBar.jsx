@@ -45,8 +45,10 @@ export default function TopBar() {
     () => ({ setNav: app.setNav, openCopilot: app.openCopilot, openRun: app.openRun }),
     [app.setNav, app.openCopilot, app.openRun]
   );
-  const index = useMemo(() => buildSearchIndex(app.report, actions), [app.report, actions, app.report.snapshot.human_queue.length]);
-  const notes = useMemo(() => notifications(app.report, actions), [app.report, actions, app.report.snapshot.human_queue]);
+  // report is updated immutably by the store, so its identity is a correct
+  // dependency — search results and notifications refresh on every change.
+  const index = useMemo(() => buildSearchIndex(app.report, actions), [app.report, actions]);
+  const notes = useMemo(() => notifications(app.report, actions), [app.report, actions]);
 
   const hits = q.trim() ? index.filter((x) => (x.t + ' ' + x.m + ' ' + x.group).toLowerCase().includes(q.trim().toLowerCase())).slice(0, 12) : [];
   let lastGroup = null;

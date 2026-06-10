@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { press } from '../lib/a11y.js';
 import { useApp } from '../App.jsx';
 import { SKU_NAMES } from '../lib/constants.js';
 import { timeAgo, isHighPriority } from '../lib/format.js';
@@ -30,7 +31,7 @@ export default function Queue() {
 
       <div className="filter-tabs">
         {tabs.map((t) => (
-          <div key={t.key} className={'ftab' + (filter === t.key ? ' active' : '')} onClick={() => setFilter(t.key)}>
+          <div key={t.key} className={'ftab' + (filter === t.key ? ' active' : '')} {...press(() => setFilter(t.key))}>
             {t.label}<span className="cnt">{t.n}</span>
           </div>
         ))}
@@ -42,7 +43,7 @@ export default function Queue() {
           {items.map((item, i) => {
             if (item.type === 'INTERVENTION') {
               return (
-                <div key={i} className={'data-row' + (item._actioned ? ' dr-row-done' : '')} onClick={() => openCopilot(item)}>
+                <div key={i} className={'data-row' + (item._actioned ? ' dr-row-done' : '')} {...press(() => openCopilot(item))}>
                   <div className="dr-main">
                     <div className="dr-top">
                       <span className="badge brass">Intervention</span>
@@ -64,7 +65,7 @@ export default function Queue() {
             const name = isProc ? SKU_NAMES[item.sku] || item.sku : item.product || 'Warranty Claim';
             const meta = isProc ? `${item.store || '—'} · ${item.reason || '—'}` : `${item.brand || '—'} · AED ${item.declared_value_aed}`;
             return (
-              <div key={i} className={'data-row' + (item._actioned ? ' dr-row-done' : '')} onClick={() => openCopilot(item)}>
+              <div key={i} className={'data-row' + (item._actioned ? ' dr-row-done' : '')} {...press(() => openCopilot(item))}>
                 <div className="dr-main">
                   <div className="dr-top">
                     <span className={'badge ' + (isProc ? 'brass' : 'teal')}>{isProc ? 'Procurement' : 'Warranty'}</span>

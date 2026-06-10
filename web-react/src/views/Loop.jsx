@@ -1,4 +1,5 @@
 import { useApp } from '../App.jsx';
+import { press } from '../lib/a11y.js';
 import { SKU_NAMES } from '../lib/constants.js';
 import { csatClass, npsClass, fmtNPS, channelLabel } from '../lib/format.js';
 
@@ -48,7 +49,7 @@ export default function Loop() {
             const name = SKU_NAMES[r.product] || r.product;
             const active = sel && sel.type === 'loop' && sel.data.sap_ticket_id === r.sap_ticket_id;
             return (
-              <div className={'cl-row' + (active ? ' active' : '')} key={i} onClick={() => selectItem('loop', r)}>
+              <div className={'cl-row' + (active ? ' active' : '')} key={i} {...press(() => selectItem('loop', r), { 'aria-pressed': active })}>
                 <div className="cl-case">{name}<span className="sub">{r.brand} · {r.category}</span></div>
                 <span className="badge neutral">{channelLabel(r.channel)}</span>
                 <span className={'cl-v ' + (r.csat != null ? csatClass(r.csat) : '')}>{r.csat ?? '—'}</span>

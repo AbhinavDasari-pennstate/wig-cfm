@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { press } from '../lib/a11y.js';
 import { useApp } from '../App.jsx';
 import { BRAND_REGIONS, SKU_NAMES } from '../lib/constants.js';
 import { getAlerts, pendingQueue } from '../lib/data.js';
@@ -149,16 +150,22 @@ function RailAlert({ alert, report, toast }) {
   const watchList = report.scenarios.find((s) => s.id === 'velocity_digest')?.result?.watch_list || [];
   const watchEntry = watchList.find((w) => w.includes(alert.sku || alert.product_sku)) || '';
   const isNew = alert.velocity_pct == null;
-  const onChip = (e, label) => {
-    const chip = e.currentTarget;
-    if (chip.dataset.done) return;
+  // Proposed-state lives in React (keyed per alert), not in DOM attributes —
+  // the old DOM mutation leaked "done" state across alerts on node reuse.
+  const [proposed, setProposed] = useState({});
+  useEffect(() => setProposed({}), [alert.alert_id]);
+  const onChip = (label) => {
+    if (proposed[label]) return;
     const team = label.toLowerCase().includes('product') ? 'the Product Team' : 'Quality Review';
     toast(`Proposed to ${team} — ${alert.brand} ${alert.sku || alert.product_sku}. A person will action it.`);
-    chip.dataset.done = '1';
-    chip.style.opacity = '.6';
-    const arrow = chip.querySelector('span:last-child');
-    if (arrow) arrow.textContent = '✓';
+    setProposed((p) => ({ ...p, [label]: true }));
   };
+  const Chip = ({ label, sub }) => (
+    <div className="action-chip" style={proposed[label] ? { opacity: 0.6 } : undefined} {...press(() => onChip(label), { 'aria-pressed': !!proposed[label] })}>
+      <div><div className="label">{label}</div><div className="sub">{sub}</div></div>
+      <span>{proposed[label] ? '✓' : '→'}</span>
+    </div>
+  );
   return (
     <>
       <div className="rail-head">
@@ -183,8 +190,8 @@ function RailAlert({ alert, report, toast }) {
         <div className="rail-section">
           <div className="rail-section-k">Recommended actions</div>
           <div className="action-chips">
-            <div className="action-chip" onClick={(e) => onChip(e, 'Notify Product Team')}><div><div className="label">Notify Product Team</div><div className="sub">Raise awareness of quality signal</div></div><span>→</span></div>
-            <div className="action-chip" onClick={(e) => onChip(e, 'Escalate to Quality Review')}><div><div className="label">Escalate to Quality Review</div><div className="sub">Open formal investigation</div></div><span>→</span></div>
+            <Chip label="Notify Product Team" sub="Raise awareness of quality signal" />
+            <Chip label="Escalate to Quality Review" sub="Open formal investigation" />
           </div>
           <div className="propose-note">Proposing notifies a person — agents don't transact</div>
         </div>
