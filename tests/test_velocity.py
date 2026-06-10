@@ -5,17 +5,22 @@ from core.llm import ScriptedLLMRunner
 from agents import agent3_quality
 
 
-async def test_velocity_spike_fires_before_volume_threshold():
+async def test_velocity_spikes_fire_before_volume_threshold():
     backend = DemoBackend()
     scan = await agent3_quality.run_daily_quality_scan(backend)
     spikes = [a for a in scan["alerts"] if a["type"] == "velocity_spike"]
-    assert len(spikes) == 1
-    s = spikes[0]
-    assert (s["brand"], s["sku"]) == ("GEEPAS", "GK-NEW")
-    assert s["recent"] == 6 and s["prior"] == 2
-    assert s["velocity_pct"] == 200.0
-    # The spike fired even though total (8) is under the legacy volume threshold (15).
-    assert s["total"] < agent3_quality.VOLUME_THRESHOLD
+    # Determinism invariant: exactly these two spikes, nothing else.
+    assert {(s["brand"], s["sku"]) for s in spikes} == {("GEEPAS", "GK-NEW"),
+                                                        ("KRYPTON", "KT-IRON21")}
+    geepas = next(s for s in spikes if s["brand"] == "GEEPAS")
+    assert geepas["recent"] == 6 and geepas["prior"] == 2
+    assert geepas["velocity_pct"] == 200.0
+    krypton = next(s for s in spikes if s["brand"] == "KRYPTON")
+    assert krypton["prior"] == 0 and krypton["velocity_pct"] is None  # new SKU
+    assert krypton["recent"] >= agent3_quality.VELOCITY_MIN_RECENT
+    # Both fired while total stays under the legacy volume threshold (15).
+    for s in spikes:
+        assert s["total"] < agent3_quality.VOLUME_THRESHOLD
     assert not any(a["type"] == "volume_threshold" for a in scan["alerts"])
 
 
