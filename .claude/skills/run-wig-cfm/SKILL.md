@@ -78,11 +78,10 @@ curl -s -X POST http://localhost:8013/fulfillment-confirmed -H "Content-Type: ap
 python -m pytest -q
 ```
 
-As of 2026-06-10: **3 known stale failures** (`test_velocity`, one in
-`test_safety`, one in `test_diagnosis`) — seed-data drift, fixes are Tasks 1–3
-of `docs/superpowers/plans/2026-06-10-wig-cfm-real-llm.md`. The guardrail
-proofs in `test_safety.py` (no transactional tools) pass. If you see more than
-3 failures, something is actually broken.
+35 tests, all passing as of 2026-06-10 (the 3 historical seed-drift failures
+were fixed by Tasks 1–3 of
+`docs/superpowers/plans/2026-06-10-wig-cfm-real-llm.md`). Any failure means
+something is actually broken.
 
 ## Gotchas
 

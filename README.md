@@ -23,6 +23,22 @@ pytest -q
 
 No API keys or network needed — the demo runs entirely offline.
 
+### Real LLM (optional)
+
+To put real Claude behind live ingestion (`POST /feedback/*`) and the fren
+co-solver (`POST /api/fren`):
+
+```bash
+export WIG_RUNNER=sdk
+export ANTHROPIC_API_KEY=sk-ant-...
+# optional: export WIG_LLM_MODEL=claude-opus-4-8
+uvicorn orchestrator.main:app --port 8000
+```
+
+`GET /api/demo` (the dashboard report) always uses the deterministic scripted
+brain, so the demo invariants never change. Any LLM failure transparently falls
+back to scripted — check `GET /health` for `runner` and `llm_fallbacks`.
+
 ## What the demo shows
 
 Six scenarios run the **real agents** end-to-end:
