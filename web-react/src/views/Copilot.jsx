@@ -3,6 +3,7 @@ import { useApp } from '../App.jsx';
 import { SKU_NAMES, FREN_SCRIPTS } from '../lib/constants.js';
 import { isHighPriority } from '../lib/format.js';
 import { timelineSteps, precedent, gapChecks, frenMatch, isArabic } from '../lib/copilot.js';
+import { askFren } from '../lib/fren.js';
 import { loadNote, saveNote } from '../lib/store.js';
 import { FrenMessages, FrenInput } from '../components/FrenBits.jsx';
 
@@ -78,14 +79,25 @@ function StandardCopilot({ item }) {
     return () => clearTimeout(id);
   }, [script]);
 
-  const ask = (text, scripted) => {
+  // PII-free item summary for the LLM: ids/SKU/value only — never the drafted
+  // message, which contains the customer's name.
+  const itemContext = isProc
+    ? `Procurement approval ${item.workflow_task_id || ''}: SKU ${item.sku || '—'} (${name}), trigger ${(item.reason || '—').replace('_', ' ')}, store ${item.store || '—'}. Recommendation awaiting human buyer approval.`
+    : `Warranty approval ${item.workflow_task_id || ''}: ${name}, declared value AED ${item.declared_value_aed}${isHigh ? ' (HIGH priority — above the AED 500 gate)' : ''}, warranty valid, reply drafted and awaiting desk release.`;
+
+  const ask = async (text, scripted) => {
     const t = (text || '').trim();
     if (!t) return;
     setFrenInput('');
     setHist((h) => [...h, { role: 'user', text: t }]);
     setThinking(true);
-    const reply = scripted != null ? scripted : frenMatch(script.chips, t);
-    setTimeout(() => { setThinking(false); setHist((h) => [...h, { role: 'fren', text: reply }]); }, scripted != null ? 700 : 900);
+    if (scripted != null) {
+      setTimeout(() => { setThinking(false); setHist((h) => [...h, { role: 'fren', text: scripted }]); }, 700);
+      return;
+    }
+    const reply = await askFren(t, { itemContext, fallback: () => frenMatch(script.chips, t) });
+    setThinking(false);
+    setHist((h) => [...h, { role: 'fren', text: reply }]);
   };
 
   const desk = isProc ? 'Procurement Buyer Desk' : 'Warranty Desk';
@@ -268,14 +280,21 @@ function InterventionCopilot({ item }) {
     return () => clearTimeout(id);
   }, [item]);
 
-  const ask = (text, scripted) => {
+  const itemContext = `Human intervention ${item.workflow_task_id}: operator requested "${item.request}" on run "${item.source_title}", assigned to ${item.assigned_to}, drafted and awaiting apply/release.`;
+
+  const ask = async (text, scripted) => {
     const t = (text || '').trim();
     if (!t) return;
     setFrenInput('');
     setHist((h) => [...h, { role: 'user', text: t }]);
     setThinking(true);
-    const reply = scripted != null ? scripted : frenMatch(chips, t);
-    setTimeout(() => { setThinking(false); setHist((h) => [...h, { role: 'fren', text: reply }]); }, scripted != null ? 700 : 900);
+    if (scripted != null) {
+      setTimeout(() => { setThinking(false); setHist((h) => [...h, { role: 'fren', text: scripted }]); }, 700);
+      return;
+    }
+    const reply = await askFren(t, { itemContext, fallback: () => frenMatch(chips, t) });
+    setThinking(false);
+    setHist((h) => [...h, { role: 'fren', text: reply }]);
   };
 
   const goRun = () => { const sc = (report.scenarios || []).find((s) => s.id === item.source_run); if (sc) { closeCopilot(); openRun(sc); } };
