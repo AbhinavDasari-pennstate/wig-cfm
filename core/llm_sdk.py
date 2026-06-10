@@ -77,6 +77,15 @@ Mandatory rules:
 
 _CATEGORY_NAMES = ", ".join(c.value for c in FeedbackCategory)
 
+_FREN_SYSTEM = (
+    "You are fren, the co-solver inside WIG's customer-feedback dashboard, advising a "
+    "department head. Answer in 1-3 sentences of professional British English, using ONLY "
+    "the dashboard context provided. Core facts you may always state: the AI agents read, "
+    "classify, draft and recommend, but hold no transactional tools — they propose, never "
+    "transact; a human approves every outward action. Never invent numbers; if the context "
+    "does not contain the answer, say so briefly. Never name individual staff."
+)
+
 
 def _build_prompt(task: str, payload: dict) -> tuple[str, str]:
     lang = payload.get("language", "ENGLISH")
@@ -179,3 +188,22 @@ class SDKRunner:
                         task, type(exc).__name__)
             self.fallbacks += 1
             return await self._fallback.run(task, payload)
+
+    async def fren(self, question: str, context: str,
+                   item_context: str | None = None) -> str | None:
+        """Answer a dashboard question. None means: use the local keyword fallback."""
+        try:
+            user = f"Dashboard context:\n{context}\n"
+            if item_context:
+                user += f"\nItem under review:\n{item_context}\n"
+            user += f"\nQuestion: {question}"
+            resp = await self._client.messages.create(
+                model=self._model, max_tokens=600,
+                system=_FREN_SYSTEM,
+                messages=[{"role": "user", "content": user}],
+            )
+            return next((b.text for b in resp.content if b.type == "text"), None)
+        except Exception as exc:
+            log.warning("fren LLM call failed (%s) — falling back", type(exc).__name__)
+            self.fallbacks += 1
+            return None

@@ -92,3 +92,16 @@ async def test_guardrail_routing_is_runner_independent():
                             channel=FeedbackChannel.EMAIL)
     res = await agent1_intake.process_intake(ticket, DemoBackend(), runner)
     assert res["routing"] == "HITL"
+
+
+async def test_fren_returns_answer_text():
+    runner = _runner(text="GEEPAS NPS is +38 this week.")
+    out = await runner.fren("how is GEEPAS", "GEEPAS: NPS +38")
+    assert out == "GEEPAS NPS is +38 this week."
+
+
+async def test_fren_failure_returns_none_and_counts():
+    runner = _runner(error=RuntimeError("simulated outage"))
+    out = await runner.fren("how is GEEPAS", "GEEPAS: NPS +38")
+    assert out is None
+    assert runner.fallbacks == 1
