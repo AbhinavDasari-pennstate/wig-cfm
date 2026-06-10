@@ -47,6 +47,7 @@ async def test_regular_history_still_routes_to_human_not_auto_po():
     from models.feedback_ticket import (Brand, FeedbackCategory, FeedbackChannel,
                                         FeedbackTicket)
     backend = DemoBackend()
+    queue_before = len(backend.human_queue)
     ticket = FeedbackTicket(raw_text="air fryer missing from shelf",
                             channel=FeedbackChannel.QR_KIOSK, brand=Brand.NESTO,
                             category=FeedbackCategory.OUT_OF_STOCK,
@@ -54,4 +55,7 @@ async def test_regular_history_still_routes_to_human_not_auto_po():
     res = await agent5_procurement.process_out_of_stock(ticket, backend, ScriptedLLMRunner())
     assert res["case"] == 1 and res["reason"] == "REGULAR_REORDER_RECOMMENDED"
     assert any(a["kind"] == "buyer_notified" for a in backend.audit)
-    assert len(backend.human_queue) == 1  # a person must approve
+    # Exactly one new approval task was appended — a person must approve.
+    new_items = backend.human_queue[queue_before:]
+    assert len(new_items) == 1
+    assert new_items[0]["reason"] == "REGULAR_REORDER_RECOMMENDED"
