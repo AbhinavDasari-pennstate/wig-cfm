@@ -6,3 +6,4 @@ pydantic>=2.7
 python-dotenv>=1.0
 pytest>=8.2
 pytest-asyncio>=0.23
+anthropic>=0.60
