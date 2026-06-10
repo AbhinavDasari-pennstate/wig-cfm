@@ -10,6 +10,8 @@ Two surfaces:
 
 from __future__ import annotations
 
+import logging
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -32,9 +34,23 @@ DIST = Path(__file__).resolve().parent.parent / "web-react" / "dist"
 # all referenced from index.html as /assets/*. Not an API surface; serves files only.
 app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
 
+def _select_runner():
+    """WIG_RUNNER=sdk + ANTHROPIC_API_KEY → real LLM for live ingestion + fren.
+    Anything else (including a broken key) → scripted, logged, never fatal.
+    The /api/demo report ALWAYS uses ScriptedLLMRunner (see demo/runner.py)."""
+    if os.environ.get("WIG_RUNNER", "scripted").lower() == "sdk":
+        try:
+            from core.llm_sdk import SDKRunner
+            return SDKRunner()
+        except Exception as exc:
+            logging.getLogger("wig.llm").warning(
+                "WIG_RUNNER=sdk but SDKRunner unavailable (%s) — running scripted", exc)
+    return ScriptedLLMRunner()
+
+
 # App-level backend for live ingestion (the dashboard uses a fresh one per call).
 _BACKEND = DemoBackend()
-_RUNNER = ScriptedLLMRunner()
+_RUNNER = _select_runner()
 
 
 async def _intake_and_route(ticket: FeedbackTicket) -> dict:
@@ -52,7 +68,9 @@ async def _intake_and_route(ticket: FeedbackTicket) -> dict:
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok"}
+    return {"status": "ok",
+            "runner": "sdk" if hasattr(_RUNNER, "fren") else "scripted",
+            "llm_fallbacks": getattr(_RUNNER, "fallbacks", 0)}
 
 
 _REPORT_CACHE: dict | None = None
