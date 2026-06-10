@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useApp } from '../App.jsx';
 import { GFREN_CHIPS } from '../lib/constants.js';
 import { frenAnswer } from '../lib/data.js';
+import { askFren } from '../lib/fren.js';
 import { FrenMessages } from './FrenBits.jsx';
 
 // Global "Ask fren" co-solver: a floating FAB that opens a docked chat.
@@ -24,17 +25,15 @@ export default function FrenDock() {
     }
   }, [open]);
 
-  const ask = (text) => {
+  const ask = async (text) => {
     const t = text.trim();
     if (!t) return;
     setValue('');
     setHistory((h) => [...h, { role: 'user', text: t }]);
     setThinking(true);
-    const reply = frenAnswer(report, t);
-    setTimeout(() => {
-      setThinking(false);
-      setHistory((h) => [...h, { role: 'fren', text: reply }]);
-    }, 750);
+    const reply = await askFren(t, { fallback: () => frenAnswer(report, t) });
+    setThinking(false);
+    setHistory((h) => [...h, { role: 'fren', text: reply }]);
   };
 
   const chips = GFREN_CHIPS[active] || GFREN_CHIPS.overview;
