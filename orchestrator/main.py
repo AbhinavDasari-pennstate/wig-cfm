@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -130,6 +131,40 @@ async def api_fren(payload: dict) -> dict:
     if not answer:
         return {"answer": None, "fallback": True}
     return {"answer": answer, "fallback": False}
+
+
+# Operator decisions the dashboard can record. All are notify/record actions —
+# none commits money, goods, or an order (a desk human performs the real-world
+# step after being notified).
+_ACTION_LABELS = {"Forwarded", "Released", "Applied"}
+
+
+@app.post("/api/queue/{task_id}/action")
+async def queue_action(task_id: str, payload: dict) -> dict:
+    """Persist an operator's queue decision into the cached report so it
+    survives page reloads (session-scoped; ?refresh=1 rebuilds from scratch)."""
+    label = (payload.get("label") or "").strip()
+    if label not in _ACTION_LABELS:
+        raise HTTPException(422, f"label must be one of {sorted(_ACTION_LABELS)}")
+    global _REPORT_CACHE
+    if _REPORT_CACHE is None:
+        _REPORT_CACHE = await build_report()
+    snapshot = _REPORT_CACHE.get("snapshot") or {}
+    item = next((i for i in snapshot.get("human_queue", [])
+                 if i.get("workflow_task_id") == task_id), None)
+    if item is None:
+        raise HTTPException(404, f"unknown queue item {task_id}")
+    now = datetime.now(timezone.utc).isoformat()
+    item["_actioned"] = True
+    item["_actionLabel"] = label
+    item["_actioned_at"] = now
+    note = (payload.get("note") or "").strip()
+    if note:
+        item["_note"] = note[:500]
+    snapshot.setdefault("audit", []).append({
+        "kind": "human_action", "ts": now, "workflow_task_id": task_id,
+        "label": label, "actor": "operator"})
+    return {"status": "recorded", "workflow_task_id": task_id, "label": label}
 
 
 @app.post("/feedback/email")
