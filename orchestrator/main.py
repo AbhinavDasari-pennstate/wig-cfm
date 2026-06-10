@@ -86,6 +86,52 @@ async def api_demo(refresh: bool = False) -> JSONResponse:
     return JSONResponse(_REPORT_CACHE)
 
 
+def _fren_context(report: dict) -> str:
+    """Compact, PII-free dashboard summary for fren. Aggregates only —
+    no customer names, no raw ticket text (UAE PDPL)."""
+    lines = ["Weekly brand metrics (CSAT /5, NPS, CES /5, tickets):"]
+    for brand, m in sorted((report.get("brand_metrics") or {}).items()):
+        lines.append(f"- {brand}: CSAT {m['csat']}, NPS {m['nps']:+d}, "
+                     f"CES {m['ces']}, {m['tickets']} tickets")
+    snapshot = report.get("snapshot") or {}
+    alerts = snapshot.get("quality_alerts") or []
+    lines.append(f"Quality alerts: {len(alerts)}")
+    for a in alerts:
+        lines.append(f"- {a.get('brand')} {a.get('product_sku')}: {a.get('description')}")
+    queue = snapshot.get("human_queue") or []
+    lines.append(f"Human approval queue: {len(queue)} item(s) pending — "
+                 "humans approve everything outward.")
+    ss = report.get("safety_summary") or {}
+    lines.append(f"Safety: {ss.get('purchase_orders_created', 0)} POs auto-created, "
+                 f"{ss.get('transactional_tools_available', 0)} transactional tools wired, "
+                 f"{ss.get('manipulation_attempts_contained', 0)} manipulation attempt(s) contained.")
+    mix = report.get("channel_mix") or {}
+    if mix:
+        lines.append("Channel mix (tickets): " + ", ".join(
+            f"{k} {v}" for k, v in sorted(mix.items(), key=lambda kv: -kv[1])))
+    return "\n".join(lines)
+
+
+@app.post("/api/fren")
+async def api_fren(payload: dict) -> dict:
+    """fren co-solver. {answer, fallback}; fallback=True → client uses its
+    local keyword logic (offline mode keeps working unchanged)."""
+    question = (payload.get("question") or "").strip()
+    if not question:
+        raise HTTPException(422, "question is required")
+    fren = getattr(_RUNNER, "fren", None)
+    if fren is None:
+        return {"answer": None, "fallback": True}
+    global _REPORT_CACHE
+    if _REPORT_CACHE is None:
+        _REPORT_CACHE = await build_report()
+    answer = await fren(question, _fren_context(_REPORT_CACHE),
+                        item_context=payload.get("item_context"))
+    if not answer:
+        return {"answer": None, "fallback": True}
+    return {"answer": answer, "fallback": False}
+
+
 @app.post("/feedback/email")
 async def feedback_email(raw_email: dict) -> dict:
     return await _intake_and_route(await email_listener.parse_email(raw_email))
