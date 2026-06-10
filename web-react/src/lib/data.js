@@ -20,6 +20,23 @@ export function getAlerts(report) {
 export const pendingQueue = (report) =>
   (report.snapshot.human_queue || []).filter((i) => !i._actioned);
 
+// Per-brand drill-down for the rail: category mix + resolution rate from the
+// precedent corpus, plus anything live that needs the operator's attention.
+export function brandSnapshot(report, name) {
+  const rec = (report.precedent_index || {})[name] || null;
+  const byCategory = rec
+    ? Object.entries(rec.by_category || {}).sort((a, b) => b[1] - a[1])
+    : [];
+  const alerts = getAlerts(report).filter((a) => a.brand === name);
+  const queueItems = pendingQueue(report).filter((i) => {
+    if (i.type === 'WARRANTY_FULFILLMENT') return (i.brand || '') === name;
+    if (i.type === 'PROCUREMENT_APPROVAL')
+      return (SKU_NAMES[i.sku] || '').split(' ')[0].toUpperCase() === name;
+    return false;
+  });
+  return { rec, byCategory, alerts, queueItems };
+}
+
 // actions: { setNav(key), openCopilot(item) }
 export function notifications(report, actions) {
   const out = [];

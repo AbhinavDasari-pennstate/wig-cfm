@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { press } from '../lib/a11y.js';
 import { useApp } from '../App.jsx';
 import { BRAND_REGIONS, SKU_NAMES } from '../lib/constants.js';
-import { getAlerts, pendingQueue } from '../lib/data.js';
+import { getAlerts, pendingQueue, brandSnapshot } from '../lib/data.js';
 import { csatClass, npsClass, fmtCSAT, fmtNPS, trendArrow, channelLabel, langLabel, isHighPriority } from '../lib/format.js';
 
 /* ── nothing-selected per-section briefing ── */
@@ -110,10 +110,13 @@ function RailEmpty({ active, report }) {
 }
 
 function RailBrand({ data }) {
+  const { report, setNav, openCopilot } = useApp();
   const { name, m, p } = data;
   const trC = trendArrow(m.csat, p ? p.csat : null);
   const trN = trendArrow(m.nps, p ? p.nps : null);
   const trE = trendArrow(m.ces, p ? p.ces : null);
+  const snap = brandSnapshot(report, name);
+  const maxCat = snap.byCategory.length ? snap.byCategory[0][1] : 1;
   return (
     <>
       <div className="rail-head">
@@ -139,6 +142,42 @@ function RailBrand({ data }) {
             <div className="rail-kv"><span className="k">CSAT</span><span className="v"><span className={'arrow ' + trC.cls}>{trC.sym}</span> {trC.note} (was {fmtCSAT(p.csat)})</span></div>
             <div className="rail-kv"><span className="k">NPS</span><span className="v"><span className={'arrow ' + trN.cls}>{trN.sym}</span> {trN.note} (was {fmtNPS(p.nps)})</span></div>
             <div className="rail-kv"><span className="k">CES</span><span className="v"><span className={'arrow ' + trE.cls}>{trE.sym}</span> {trE.note} (was {fmtCSAT(p.ces)})</span></div>
+          </div>
+        )}
+        {snap.byCategory.length > 0 && (
+          <div className="rail-section">
+            <div className="rail-section-k">Category mix · all recorded cases</div>
+            {snap.byCategory.map(([cat, n]) => (
+              <div className="cat-bar" key={cat}>
+                <span className="cb-label">{cat.replace(/_/g, ' ').toLowerCase()}</span>
+                <span className="cb-track"><span className="cb-fill" style={{ width: Math.max(8, (n / maxCat) * 100) + '%' }} /></span>
+                <span className="cb-n">{n}</span>
+              </div>
+            ))}
+            {snap.rec && (
+              <div className="rail-kv" style={{ marginTop: 6 }}>
+                <span className="k">Resolution rate</span>
+                <span className="v">{Math.round((snap.rec.resolved / Math.max(1, snap.rec.total)) * 100)}% ({snap.rec.resolved}/{snap.rec.total})</span>
+              </div>
+            )}
+          </div>
+        )}
+        {(snap.alerts.length > 0 || snap.queueItems.length > 0) && (
+          <div className="rail-section">
+            <div className="rail-section-k">Needs attention now</div>
+            {snap.alerts.map((a, i) => (
+              <div className="rail-kv link" key={'a' + i} {...press(() => setNav('quality'))}>
+                <span className="k">⚠ {a.sku || a.product_sku}</span>
+                <span className="v" style={{ color: 'var(--blood)', fontWeight: 600 }}>{a.velocity_pct == null ? 'new-SKU spike' : '+' + a.velocity_pct + '%'}</span>
+              </div>
+            ))}
+            {snap.queueItems.map((item, j) => (
+              <div className="rail-kv link" key={'q' + j} {...press(() => openCopilot(item))}>
+                <span className="k">◷ {item.workflow_task_id}</span>
+                <span className="v">{item.type === 'PROCUREMENT_APPROVAL' ? 'awaiting buyer' : 'awaiting desk'} →</span>
+              </div>
+            ))}
+            <div className="propose-note">Open an item to review and approve — agents don't transact.</div>
           </div>
         )}
       </div>
