@@ -5,7 +5,7 @@ import { isHighPriority } from '../lib/format.js';
 import { timelineSteps, precedent, gapChecks, frenMatch, isArabic } from '../lib/copilot.js';
 import { askFren } from '../lib/fren.js';
 import { loadNote, saveNote } from '../lib/store.js';
-import { FrenMessages, FrenInput } from '../components/FrenBits.jsx';
+import { FrenLive, FrenMessages, FrenInput } from '../components/FrenBits.jsx';
 
 /* ─────────── shared modals ─────────── */
 function ConfirmModal({ title, body, onCancel, onConfirm }) {
@@ -104,7 +104,7 @@ function StandardCopilot({ item }) {
   const doConfirm = () => {
     setConfirmOpen(false);
     const label = isProc ? 'Forwarded' : 'Released';
-    actionItem(item.workflow_task_id, label);
+    actionItem(item.workflow_task_id, label, note);
     setActioned(true);
     setHist((h) => [...h, { role: 'fren', text: `Done — ${item.workflow_task_id || 'this item'} has been forwarded to ${desk}. They will review and action it. It is marked ${label.toLowerCase()} in the queue.` }]);
   };
@@ -235,7 +235,7 @@ function StandardCopilot({ item }) {
 
       {/* fren column */}
       <div className="col col-fren">
-        <div className="fren-head"><div className="fren-avatar">f</div><div><div className="fren-name">fren <span className="sub">· Co-solver</span></div></div><div className="fren-live"><span className="d" /> Live</div></div>
+        <div className="fren-head"><div className="fren-avatar">f</div><div><div className="fren-name">fren <span className="sub">· Co-solver</span></div></div><FrenLive /></div>
         <div className="fren-ctx">{ctxChips.map((c, i) => <span className="ctxchip" key={i}>{c}</span>)}</div>
         <FrenMessages history={hist} thinking={thinking} />
         {!thinking && (
@@ -363,7 +363,7 @@ function InterventionCopilot({ item }) {
       </div>
 
       <div className="col col-fren">
-        <div className="fren-head"><div className="fren-avatar">f</div><div><div className="fren-name">fren <span className="sub">· Co-solver</span></div></div><div className="fren-live"><span className="d" /> Live</div></div>
+        <div className="fren-head"><div className="fren-avatar">f</div><div><div className="fren-name">fren <span className="sub">· Co-solver</span></div></div><FrenLive /></div>
         <div className="fren-ctx">{[item.workflow_task_id, 'intervention', item.assigned_to].map((c, i) => <span className="ctxchip" key={i}>{c}</span>)}</div>
         <FrenMessages history={hist} thinking={thinking} />
         {!thinking && (

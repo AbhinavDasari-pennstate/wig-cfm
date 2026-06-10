@@ -145,4 +145,22 @@ export const api = {
       return { ...sample, _offline: true };
     }
   },
+
+  // Persist an operator decision server-side (fire-and-forget: local state is
+  // already updated optimistically; offline or client-only items just no-op).
+  recordAction(taskId, label, note) {
+    fetch(`/api/queue/${encodeURIComponent(taskId)}/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(note ? { label, note } : { label }),
+    }).catch(() => {});
+  },
+
+  async fetchHealth() {
+    try {
+      const r = await fetch('/health');
+      if (r.ok) return await r.json();
+    } catch { /* offline */ }
+    return null;
+  },
 };

@@ -3,7 +3,7 @@ import { useApp } from '../App.jsx';
 import { GFREN_CHIPS } from '../lib/constants.js';
 import { frenAnswer } from '../lib/data.js';
 import { askFren } from '../lib/fren.js';
-import { FrenMessages } from './FrenBits.jsx';
+import { FrenLive, FrenMessages } from './FrenBits.jsx';
 
 // Global "Ask fren" co-solver: a floating FAB that opens a docked chat.
 export default function FrenDock() {
@@ -51,7 +51,7 @@ export default function FrenDock() {
       <div className="fren-head">
         <div className="fren-avatar">f</div>
         <div><div className="fren-name">fren <span className="sub">· Co-solver</span></div></div>
-        <div className="fren-live"><span className="d" /> Live</div>
+        <FrenLive />
         <span className="fren-dock-close" title="Close" onClick={() => setOpen(false)}>×</span>
       </div>
       <FrenMessages history={history} thinking={thinking} />

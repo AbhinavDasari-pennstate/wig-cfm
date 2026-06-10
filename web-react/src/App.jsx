@@ -51,8 +51,11 @@ export default function App() {
   const [railOpen, setRailOpen] = useState(false); // mobile drawer
   const [toasts, setToasts] = useState([]);
 
+  const [llmLive, setLlmLive] = useState(false);
+
   useEffect(() => {
     api.fetchReport().then((r) => dispatch({ type: 'load', report: r })).catch(() => setError(true));
+    api.fetchHealth().then((h) => setLlmLive(h?.runner === 'sdk'));
   }, []);
 
   // Hash is the single source of truth for navigation.
@@ -77,8 +80,13 @@ export default function App() {
   const reportRef = useRef(report);
   reportRef.current = report;
 
-  // Store actions (immutable updates via the reducer).
-  const actionItem = useCallback((id, label) => dispatch({ type: 'action_item', id, label }), []);
+  // Store actions (immutable updates via the reducer). Decisions are also
+  // persisted server-side so they survive a reload (no-op when offline or for
+  // client-only intervention items).
+  const actionItem = useCallback((id, label, note) => {
+    dispatch({ type: 'action_item', id, label });
+    api.recordAction(id, label, note);
+  }, []);
   const intervene = useCallback((runId, kind, draft, desk) => {
     const item = {
       workflow_task_id: 'WF-IV-' + (interventionCount(reportRef.current) + 1),
@@ -134,10 +142,10 @@ export default function App() {
     report, active: route.active, setNav, sel, selectItem,
     copilot: copilotItem, openCopilot, closeCopilot,
     runview: runSc, openRun, closeRun, rvFrenOpen, setRvFrenOpen,
-    actionItem, intervene,
+    actionItem, intervene, llmLive,
     navCollapsed, toggleNav, railOpen, setRailOpen, toast,
   }), [report, route.active, setNav, sel, selectItem, copilotItem, openCopilot, closeCopilot,
-       runSc, openRun, closeRun, rvFrenOpen, actionItem, intervene, navCollapsed, toggleNav, railOpen, toast]);
+       runSc, openRun, closeRun, rvFrenOpen, actionItem, intervene, llmLive, navCollapsed, toggleNav, railOpen, toast]);
 
   if (error)
     return (

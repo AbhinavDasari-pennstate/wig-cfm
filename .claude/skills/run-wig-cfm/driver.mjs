@@ -146,8 +146,22 @@ async function shots() {
     await page.screenshot({ path: path.join(SHOTS, 'copilot.png') });
     console.log('ok   shot copilot.png');
 
+    // Approve it (propose-don't-transact: this only notifies the desk), then
+    // verify the decision survives a full page reload — server-side
+    // persistence via POST /api/queue/{id}/action.
+    await page.click('.cpb.primary');
+    await page.waitForSelector('.cp-modal-btn.confirm');
+    await page.click('.cp-modal-btn.confirm');
+    await page.waitForTimeout(400); // fire-and-forget POST
+    await page.click('.cp-back');   // hash → queue, so reload lands on the list
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForSelector('.data-row');
+    const done = await page.locator('.data-row .badge.done').count();
+    ok('queue action persists across reload', done >= 1, `${done} actioned row(s)`);
+    await page.screenshot({ path: path.join(SHOTS, 'queue-actioned.png') });
+    console.log('ok   shot queue-actioned.png');
+
     // Global fren dock: open, ask a question, capture the reply.
-    await page.click('.cp-back'); // leave copilot first (fab hides under it)
     await page.click('.fren-fab');
     await page.waitForSelector('.fren-input');
     await page.fill('.fren-input', 'how is GEEPAS doing');
